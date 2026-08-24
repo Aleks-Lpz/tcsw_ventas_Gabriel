@@ -11,5 +11,5 @@ Proyecto desarrollado para la experiencia educativa **Tecnologías para la Const
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone <https://github.com/Aleks-Lpz/tcsw_ventas_Gabriel>
    cd tcsw-ventas
