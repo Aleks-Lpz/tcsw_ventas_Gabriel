@@ -1,7 +1,7 @@
 # P01. Ambiente reproducible y Producto
 
 Proyecto desarrollado para la experiencia educativa **Tecnologías para la Construcción de Software**.
-
+El proyecto ahora incluye el modelado de ventas en memoria con las clases
 ## Prerrequisitos
 * Java 11
 * Maven
