@@ -13,4 +13,8 @@ El proyecto ahora incluye el modelado de ventas en memoria con las clases
    ```bash
    git clone <https://github.com/Aleks-Lpz/tcsw_ventas_Gabriel>
    cd tcsw-ventas
+
    modificacion concurrente desde main para provocar el conflicto
+   y
+   Modificacion desde la rama p03 para simular conflicto
+ 
