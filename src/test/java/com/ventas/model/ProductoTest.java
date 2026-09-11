@@ -19,8 +19,7 @@ public class ProductoTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             new Producto("P002", "Mouse", -50.0, 5);
         });
-        assertEquals("El precio no puede ser negativo.", exception.getMessage());
-    }
+assertEquals("El precio del producto debe ser mayor a cero", exception.getMessage());    }
 
     @Test
     void testExistenciaNegativaInvalida() {
