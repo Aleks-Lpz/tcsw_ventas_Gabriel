@@ -18,7 +18,7 @@ public class VentaTest {
     void testPartidaCantidadInvalida() {
         Producto p = new Producto("P001", "Teclado Mecánico", 500.0, 10);
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            new Partida(p, 0);
+            new Partida(p, -3);
         });
         assertEquals("La cantidad en la partida debe ser mayor a cero.", exception.getMessage());
     }

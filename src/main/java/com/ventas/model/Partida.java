@@ -7,8 +7,11 @@ public class Partida {
     public Partida(Producto producto, int cantidad) {
         if (producto == null) {
             throw new IllegalArgumentException("El producto no puede ser nulo.");
+        }   
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad en la partida debe ser mayor a cero.");
         }
-        setCantidad(cantidad);
+        this.cantidad = cantidad;
         this.producto = producto;
     }
 
@@ -21,9 +24,6 @@ public class Partida {
     }
 
     public void setCantidad(int cantidad) {
-        if (cantidad <= 0) {
-            throw new IllegalArgumentException("La cantidad en la partida debe ser mayor a cero.");
-        }
         this.cantidad = cantidad;
     }
 
