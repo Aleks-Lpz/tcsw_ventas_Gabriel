@@ -9,6 +9,8 @@
 - **Issue:** #1 - Crear documentación y bitácora de contribución individual
 - **Rama:** `feat/issue-1-contribucion-individual`
 
+
+
 ## Objetivo
 
 Crear la documentación correspondiente a la contribución individual dentro del flujo colaborativo del proyecto, manteniendo la trazabilidad de la actividad mediante GitHub.
@@ -103,3 +105,11 @@ La contribución queda relacionada con los siguientes elementos del flujo colabo
 La documentación individual queda preparada para formar parte del flujo colaborativo de la actividad P04, manteniendo la trazabilidad del trabajo realizado y de las comprobaciones efectuadas.
 
 **Estado:** VERIFICADO
+
+# Reporte de Contribución - Aleks López
+
+## Issue #11: Análisis de Calidad y Configuración SonarQube / SonarLint
+- Se ejecutó el análisis de calidad de código estático mediante SonarLint sobre la arquitectura del proyecto.
+- Se configuró la compatibilidad de compilación para Java 11 utilizando `<maven.compiler.release>11</maven.compiler.release>` en el `pom.xml`.
+- Se verificó la ausencia de Code Smells y vulnerabilidades en la barra de estado de VS Code (0 errores).
+- Se ejecutaron las pruebas unitarias del módulo con Maven (`mvn clean test`), obteniendo el resultado BUILD SUCCESS.
