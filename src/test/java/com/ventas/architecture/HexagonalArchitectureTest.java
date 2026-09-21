@@ -1,6 +1,8 @@
 package com.ventas.architecture;
 
+import com.ventas.application.port.in.RegistrarProductoUseCase;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
+import com.ventas.application.service.ProductoService;
 import com.ventas.application.service.RegistrarVentaService;
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +53,22 @@ class HexagonalArchitectureTest {
             assertFalse(content.contains("com.ventas.adapter"),
                     "El dominio no debe depender de adapter: " + file.getFileName());
         }
+    }
+
+    @Test
+    void registrarProductoServiceDependeDelPuertoDeSalidaYNoDelAdaptadorConcreto() throws Exception {
+        Path archivoServicio = Paths.get("src/main/java/com/ventas/application/service/ProductoService.java");
+        String codigoServicio = Files.readString(archivoServicio);
+
+        assertTrue(codigoServicio.contains("package com.ventas.application.service;"));
+        assertTrue(codigoServicio.contains("implements RegistrarProductoUseCase"));
+        assertTrue(codigoServicio.contains("import com.ventas.application.port.out.ProductoRepository;"));
+        assertFalse(codigoServicio.contains("import com.ventas.adapter."));
+        assertFalse(codigoServicio.contains("com.ventas.adapter"));
+
+        Field campo = ProductoService.class.getDeclaredField("productoRepository");
+        assertEquals("com.ventas.application.port.out.ProductoRepository", campo.getType().getName());
+        assertTrue(RegistrarProductoUseCase.class.getName().equals("com.ventas.application.port.in.RegistrarProductoUseCase"));
+        assertTrue(ProductoService.class.getName().equals("com.ventas.application.service.ProductoService"));
     }
 }
