@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Venta {
     private List<Partida> partidas;
+    private double descuento;
 
     public Venta() {
         this.partidas = new ArrayList<>();
@@ -27,6 +28,15 @@ public class Venta {
         for (Partida partida : partidas) {
             total += partida.getSubtotal();
         }
+        total = total - descuento;
         return total;
+    }
+
+    public void aplicarDescuento(Double descuento) {
+        if(descuento>=0) {
+        this.descuento=descuento;
+        } else {
+        throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
+        }
     }
 }

@@ -14,7 +14,7 @@ class RegistrarVentaServiceTest {
     void unaVentaValidaPuedeRegistrarse() {
         Venta venta = crearVentaValida();
         FakeVentaRepository repository = new FakeVentaRepository();
-        RegistrarVentaService service = new RegistrarVentaService(repository);
+        RegistrarVentaService service = new RegistrarVentaService(repository, v -> 0.0);
 
         Venta resultado = service.registrar(venta);
 
@@ -27,7 +27,7 @@ class RegistrarVentaServiceTest {
     void elServicioUsaElVentaRepositoryParaGuardarLaVenta() {
         Venta venta = crearVentaValida();
         FakeVentaRepository repository = new FakeVentaRepository();
-        RegistrarVentaService service = new RegistrarVentaService(repository);
+        RegistrarVentaService service = new RegistrarVentaService(repository, v -> 0.0);
 
         service.registrar(venta);
 
@@ -39,7 +39,7 @@ class RegistrarVentaServiceTest {
     void laVentaDevueltaCorrespondeALaVentaRegistrada() {
         Venta venta = crearVentaValida();
         FakeVentaRepository repository = new FakeVentaRepository();
-        RegistrarVentaService service = new RegistrarVentaService(repository);
+        RegistrarVentaService service = new RegistrarVentaService(repository, v -> 0.0);
 
         Venta resultado = service.registrar(venta);
 
@@ -50,7 +50,7 @@ class RegistrarVentaServiceTest {
     @Test
     void unaVentaNullEsRechazada() {
         FakeVentaRepository repository = new FakeVentaRepository();
-        RegistrarVentaService service = new RegistrarVentaService(repository);
+        RegistrarVentaService service = new RegistrarVentaService(repository, v -> 0.0);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> service.registrar(null));
@@ -61,9 +61,9 @@ class RegistrarVentaServiceTest {
     @Test
     void noSePuedeCrearElServicioSinVentaRepository() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> new RegistrarVentaService(null));
+                () -> new RegistrarVentaService(null, v -> 0.0));
 
-        assertEquals("El repositorio de ventas no puede ser nulo.", exception.getMessage());
+        assertEquals("El repositorio de ventas y las politicas de descuento no pueden ser nulas.", exception.getMessage());
     }
 
     private Venta crearVentaValida() {
@@ -94,4 +94,7 @@ class RegistrarVentaServiceTest {
             return ultimaVentaGuardada;
         }
     }
+
+
+   
 }
