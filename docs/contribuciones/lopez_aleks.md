@@ -113,3 +113,10 @@ La documentación individual queda preparada para formar parte del flujo colabor
 - Se configuró la compatibilidad de compilación para Java 11 utilizando `<maven.compiler.release>11</maven.compiler.release>` en el `pom.xml`.
 - Se verificó la ausencia de Code Smells y vulnerabilidades en la barra de estado de VS Code (0 errores).
 - Se ejecutaron las pruebas unitarias del módulo con Maven (`mvn clean test`), obteniendo el resultado BUILD SUCCESS.
+
+## Actividad P06: Patrones de Diseño en Ventas
+### Issue #17: Centralizar las validaciones creacionales para evitar transacciones inconsistentes
+- **Patrón Aplicado:** Factory (Fábrica Creacional).
+- **Implementación:** Se creó la clase `VentaFactory` en la capa del modelo para centralizar la instanciación de ventas e imponer las reglas de negocio (invariantes de costo total mayor a cero y lista de partidas no vacía).
+- **Refactorización:** Se adaptó `RegistrarVentaService` para integrar el método creacional de la fábrica antes de invocar la persistencia en el repositorio.
+- **Pruebas Unitarias:** Se creó `VentaFactoryTest` incluyendo pruebas del comportamiento esperado y validación de excepciones ante casos de error.
