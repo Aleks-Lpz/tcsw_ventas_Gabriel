@@ -3,7 +3,7 @@ package com.ventas.model;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class VentaTest {
+class VentaTest {
 
     @Test
     void testCreacionPartidaYSubtotal() {
@@ -37,5 +37,16 @@ public class VentaTest {
 
         assertEquals(3600.0, venta.calcularTotal());
         assertEquals(2, venta.getPartidas().size());
+    }
+
+    @Test 
+    void unDescuentoNegativoLanzaUnaExcepcion() {
+        Venta venta = new Venta();
+
+        Exception exception = assertThrows(IllegalArgumentException.class,() -> {
+            venta.aplicarDescuento(-10.0);
+        });
+
+        assertEquals("Un descuento no puede ser menor a cero", exception.getMessage());
     }
 }
