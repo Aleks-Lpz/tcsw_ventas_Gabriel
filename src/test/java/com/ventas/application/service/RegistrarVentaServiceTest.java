@@ -21,7 +21,7 @@ class RegistrarVentaServiceTest {
         Venta venta = crearVentaValida();
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         Venta resultado = servicio.registrar(venta);
 
@@ -35,7 +35,7 @@ class RegistrarVentaServiceTest {
         Venta venta = crearVentaValida();
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         servicio.registrar(venta);
 
@@ -48,7 +48,7 @@ class RegistrarVentaServiceTest {
         Venta venta = crearVentaValida();
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         Venta resultado = servicio.registrar(venta);
 
@@ -60,7 +60,7 @@ class RegistrarVentaServiceTest {
     void unaVentaNullEsRechazada() {
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         IllegalArgumentException excepcion = assertThrows(IllegalArgumentException.class,
                 () -> servicio.registrar(null));
@@ -72,10 +72,10 @@ class RegistrarVentaServiceTest {
     void noSePuedeCrearElServicioSinVentaRepository() {
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
 
-        IllegalArgumentException excepcion = assertThrows(IllegalArgumentException.class,
-                () -> new RegistrarVentaService(null, publicador));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> new RegistrarVentaService(null, v -> 0.0, publicador));
 
-        assertEquals("El repositorio de ventas no puede ser nulo.", excepcion.getMessage());
+        assertEquals("Las dependencias (repositorio, política, publicador) no pueden ser nulas.", exception.getMessage());
     }
 
     @Test
@@ -83,9 +83,9 @@ class RegistrarVentaServiceTest {
         FakeVentaRepository repositorio = new FakeVentaRepository();
 
         IllegalArgumentException excepcion = assertThrows(IllegalArgumentException.class,
-                () -> new RegistrarVentaService(repositorio, null));
+                () -> new RegistrarVentaService(repositorio, v -> 0.0, null));
 
-        assertEquals("El publicador de eventos no puede ser nulo.", excepcion.getMessage());
+        assertEquals("Las dependencias (repositorio, política, publicador) no pueden ser nulas.", excepcion.getMessage());
     }
 
     @Test
@@ -93,7 +93,7 @@ class RegistrarVentaServiceTest {
         Venta venta = crearVentaValida();
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         servicio.registrar(venta);
 
@@ -106,7 +106,7 @@ class RegistrarVentaServiceTest {
         Venta venta = crearVentaValida();
         FakeVentaRepository repositorio = new FakeVentaRepository();
         FakePublicadorDeEventos publicador = new FakePublicadorDeEventos();
-        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, publicador);
+        RegistrarVentaService servicio = new RegistrarVentaService(repositorio, v -> 0.0, publicador);
 
         servicio.registrar(venta);
 
