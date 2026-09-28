@@ -3,9 +3,13 @@ package com.ventas.application.service;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
 import com.ventas.application.port.out.PublicadorDeEventos;
 import com.ventas.application.port.out.VentaRepository;
+import com.ventas.model.Partida;
 import com.ventas.model.PoliticaDescuento;
 import com.ventas.model.Venta;
 import com.ventas.model.VentaConfirmada;
+import com.ventas.model.VentaFactory;
+
+import java.util.List;
 
 public class RegistrarVentaService implements RegistrarVentaUseCase {
 
@@ -27,7 +31,7 @@ public class RegistrarVentaService implements RegistrarVentaUseCase {
         if (venta == null) {
             throw new IllegalArgumentException("La venta no puede ser nula.");
         }
-      
+        
         double descuento = politicaDescuento.calcularDescuento(venta);
         venta.aplicarDescuento(descuento);
         
@@ -36,5 +40,10 @@ public class RegistrarVentaService implements RegistrarVentaUseCase {
         publicadorDeEventos.publicar(new VentaConfirmada(ventaGuardada));
         
         return ventaGuardada;
+    }
+
+    public Venta registrarDesdePartidas(List<Partida> partidas) {
+        Venta nuevaVenta = VentaFactory.crearVenta(partidas);
+        return this.registrar(nuevaVenta); 
     }
 }
