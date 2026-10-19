@@ -1,5 +1,7 @@
-package com.ventas.adapter.in.swing;
+package com.ventas.adapter.in.swing.view;
 
+import com.ventas.adapter.in.swing.controller.CatalogoController;
+import com.ventas.adapter.in.swing.controller.VentaController;
 import com.ventas.adapter.out.memory.InMemoryProductoRepository;
 import com.ventas.adapter.out.memory.InMemoryVentaRepository;
 import com.ventas.adapter.out.notification.ReciboObservador;
@@ -41,31 +43,32 @@ public class ClienteVentasApp {
     }
 
     public static ClienteVentasSwingFrame iniciarCliente(ConsultarProductosUseCase consultarProductosUseCase,
-                                                         RegistrarVentaUseCase registrarVentaUseCase) {
-        VentaController controller = new VentaController(consultarProductosUseCase, registrarVentaUseCase);
+   RegistrarVentaUseCase registrarVentaUseCase) {
+    CatalogoController catalogoController = new CatalogoController(consultarProductosUseCase);
+    VentaController ventaController = new VentaController(registrarVentaUseCase);
+    final ClienteVentasSwingFrame[] frameHolder = new ClienteVentasSwingFrame[1];
 
-        final ClienteVentasSwingFrame[] frameHolder = new ClienteVentasSwingFrame[1];
-        try {
-            if (SwingUtilities.isEventDispatchThread()) {
-                frameHolder[0] = crearYMostrarVentana(controller);
-            } else {
-                SwingUtilities.invokeAndWait(() -> frameHolder[0] = crearYMostrarVentana(controller));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error al iniciar cliente Swing en el EDT: " + e.getMessage(), e);
+    try {
+        if (SwingUtilities.isEventDispatchThread()) {
+            frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController);
+        } else {
+            SwingUtilities.invokeAndWait(() -> frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController));
         }
-
-        return frameHolder[0];
+    } catch (Exception e) {
+        throw new RuntimeException("Error al iniciar cliente Swing en el EDT: " + e.getMessage(), e);
     }
+    return frameHolder[0];
+}
 
-    private static ClienteVentasSwingFrame crearYMostrarVentana(VentaController controller) {
-        configurarLookAndFeel();
-        ClienteVentasSwingFrame frame = new ClienteVentasSwingFrame(controller);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        frame.cargarCatalogo();
-        return frame;
-    }
+private static ClienteVentasSwingFrame crearYMostrarVentana(CatalogoController catalogoController,
+                                                            VentaController ventaController) {
+    configurarLookAndFeel();
+    ClienteVentasSwingFrame frame = new ClienteVentasSwingFrame(catalogoController, ventaController);
+    frame.setLocationRelativeTo(null);
+    frame.setVisible(true);
+    frame.cargarCatalogo();
+    return frame;
+}
 
     private static void configurarLookAndFeel() {
         try {

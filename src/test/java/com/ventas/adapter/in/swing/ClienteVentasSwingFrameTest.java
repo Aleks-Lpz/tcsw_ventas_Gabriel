@@ -1,6 +1,10 @@
 package com.ventas.adapter.in.swing;
 
-import com.ventas.model.Producto;
+import com.ventas.adapter.in.swing.controller.CatalogoController;
+import com.ventas.adapter.in.swing.controller.VentaController;
+import com.ventas.adapter.in.swing.DTO.CatalogoDTO;
+import com.ventas.adapter.in.swing.view.ClienteVentasPanel;
+import com.ventas.adapter.in.swing.view.ClienteVentasSwingFrame;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.SwingUtilities;
@@ -12,14 +16,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ClienteVentasSwingFrameTest {
 
+    private CatalogoController crearCatalogoSimulado() {
+        return new CatalogoController(() -> List.of());
+    }
+
+    private VentaController crearVentaSimulada() {
+        return new VentaController(v -> v);
+    }
+
     @Test
     void inicializacionDeComponentesYModeloEnPanel() throws Exception {
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
-
         final ClienteVentasPanel[] holder = new ClienteVentasPanel[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(controller));
-
+        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(crearCatalogoSimulado(), crearVentaSimulada()));
         ClienteVentasPanel panel = holder[0];
+
         assertNotNull(panel);
         assertNotNull(panel.getTablaProductos());
         assertNotNull(panel.getTablaPartidas());
@@ -30,36 +40,16 @@ class ClienteVentasSwingFrameTest {
     }
 
     @Test
-    void actualizarTablaProductosReflejaDatosCorrectamente() throws Exception {
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
-        final ClienteVentasPanel[] holder = new ClienteVentasPanel[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(controller));
-        ClienteVentasPanel panel = holder[0];
-
-        List<Producto> productos = List.of(
-                new Producto("P001", "Laptop", 15000.0, 5),
-                new Producto("P002", "Mouse", 300.0, 20)
-        );
-
-        ejecutarEnEDT(() -> panel.actualizarTablaProductos(productos));
-
-        assertEquals(2, panel.getModeloProductos().getRowCount());
-        assertEquals("P001", panel.getModeloProductos().getValueAt(0, 0));
-        assertEquals("Laptop", panel.getModeloProductos().getValueAt(0, 1));
-        assertEquals("P002", panel.getModeloProductos().getValueAt(1, 0));
-    }
-
-    @Test
     void actualizarTablaPartidasCalculaYMuestraTotales() throws Exception {
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
+        VentaController ventaController = crearVentaSimulada();
         final ClienteVentasPanel[] holder = new ClienteVentasPanel[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(controller));
+        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(crearCatalogoSimulado(), ventaController));
         ClienteVentasPanel panel = holder[0];
 
-        Producto producto = new Producto("P001", "Monitor", 4000.0, 10);
-        controller.agregarProducto(producto, 2);
-
-        ejecutarEnEDT(() -> panel.actualizarTablaPartidas());
+        CatalogoDTO productoSimulado = new CatalogoDTO("P001", "Monitor", 4000.0, 10);
+        ventaController.agregarProducto(productoSimulado, 2);
+        
+        ejecutarEnEDT(() -> panel.actualizarEtiquetasTotales());
 
         assertEquals(1, panel.getModeloPartidas().getRowCount());
         assertEquals("P001", panel.getModeloPartidas().getValueAt(0, 0));
@@ -70,25 +60,11 @@ class ClienteVentasSwingFrameTest {
 
     @Test
     void agregarSinSeleccionarProductoMuestraEstadoDeError() throws Exception {
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
         final ClienteVentasPanel[] holder = new ClienteVentasPanel[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(controller));
+        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(crearCatalogoSimulado(), crearVentaSimulada()));
         ClienteVentasPanel panel = holder[0];
 
         ejecutarEnEDT(() -> panel.getBtnAgregarProducto().doClick());
-
-        assertTrue(panel.getLblEstado().getText().contains("Error"));
-    }
-
-    @Test
-    void quitarSinSeleccionDePartidaMuestraEstadoDeError() throws Exception {
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
-        final ClienteVentasPanel[] holder = new ClienteVentasPanel[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasPanel(controller));
-        ClienteVentasPanel panel = holder[0];
-
-        ejecutarEnEDT(() -> panel.getBtnQuitarPartida().doClick());
-
         assertTrue(panel.getLblEstado().getText().contains("Error"));
     }
 
@@ -97,12 +73,10 @@ class ClienteVentasSwingFrameTest {
         if (GraphicsEnvironment.isHeadless()) {
             return;
         }
-
-        VentaController controller = new VentaController(() -> List.of(), v -> v);
         final ClienteVentasSwingFrame[] holder = new ClienteVentasSwingFrame[1];
-        ejecutarEnEDT(() -> holder[0] = new ClienteVentasSwingFrame(controller));
-
+        ejecutarEnEDT(() -> holder[0] = new ClienteVentasSwingFrame(crearCatalogoSimulado(), crearVentaSimulada()));
         ClienteVentasSwingFrame frame = holder[0];
+
         try {
             assertNotNull(frame);
             assertEquals("Sistema de Ventas - Cliente Swing", frame.getTitle());

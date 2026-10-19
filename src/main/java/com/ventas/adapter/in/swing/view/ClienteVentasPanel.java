@@ -1,48 +1,45 @@
-package com.ventas.adapter.in.swing;
+package com.ventas.adapter.in.swing.view;
 
-import com.ventas.model.Partida;
-import com.ventas.model.Producto;
-import com.ventas.model.Venta;
+import com.ventas.adapter.in.swing.DTO.CatalogoDTO;
+import com.ventas.adapter.in.swing.controller.CatalogoController;
+import com.ventas.adapter.in.swing.controller.VentaController;
+import com.ventas.adapter.in.swing.model.PartidaTableModel;
+import com.ventas.adapter.in.swing.model.ProductoTableModel;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 public class ClienteVentasPanel extends JPanel {
 
-    private final VentaController controller;
-    private final List<Producto> listaProductosActual = new ArrayList<>();
+    private final CatalogoController catalogoController;
+    private final VentaController ventaController;
     private final NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
 
     private JTable tablaProductos;
-    private DefaultTableModel modeloProductos;
     private JTable tablaPartidas;
-    private DefaultTableModel modeloPartidas;
-
     private JSpinner spinnerCantidad;
     private JButton btnAgregarProducto;
     private JButton btnActualizarCatalogo;
     private JButton btnQuitarPartida;
     private JButton btnLimpiarVenta;
     private JButton btnRegistrarVenta;
-
     private JLabel lblSubtotal;
     private JLabel lblTotalArticulos;
     private JLabel lblTotal;
     private JLabel lblEstado;
     private JProgressBar barraProgreso;
 
-    public ClienteVentasPanel(VentaController controller) {
-        if (controller == null) {
-            throw new IllegalArgumentException("El controlador de ventas no puede ser nulo.");
+    public ClienteVentasPanel(CatalogoController catalogoController, VentaController ventaController) {
+        if (catalogoController == null || ventaController == null) {
+            throw new IllegalArgumentException("Los controladores no pueden ser nulos.");
         }
-        this.controller = controller;
-
+        this.catalogoController = catalogoController;
+        this.ventaController = ventaController;
         inicializarComponentes();
+        configurarAccesibilidad();
         configurarEventos();
     }
 
@@ -60,7 +57,6 @@ public class ClienteVentasPanel extends JPanel {
         // Panel Central: Split con Catálogo (Izquierda) y Venta Actual (Derecha)
         JPanel panelCatalogo = crearPanelCatalogo();
         JPanel panelVenta = crearPanelVenta();
-
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelCatalogo, panelVenta);
         splitPane.setResizeWeight(0.5);
         add(splitPane, BorderLayout.CENTER);
@@ -74,32 +70,29 @@ public class ClienteVentasPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBorder(BorderFactory.createTitledBorder("Catálogo de Productos"));
 
-        String[] columnas = {"Código", "Nombre", "Precio", "Existencia"};
-        modeloProductos = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        tablaProductos = new JTable(modeloProductos);
+        // Se enlaza directamente al ProductoTableModel separable del controlador
+        tablaProductos = new JTable(catalogoController.getModeloProductos());
         tablaProductos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaProductos.setName("tablaProductos");
+
         JScrollPane scroll = new JScrollPane(tablaProductos);
         panel.add(scroll, BorderLayout.CENTER);
 
-        // Barra inferior del catálogo: Cantidad y botón agregar
         JPanel panelControles = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        panelControles.add(new JLabel("Cantidad:"));
+        JLabel lblCantidad = new JLabel("Cantidad:");
         spinnerCantidad = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
         spinnerCantidad.setName("spinnerCantidad");
-        panelControles.add(spinnerCantidad);
+        lblCantidad.setLabelFor(spinnerCantidad);
 
         btnAgregarProducto = new JButton("Agregar a la Venta");
         btnAgregarProducto.setName("btnAgregarProducto");
-        panelControles.add(btnAgregarProducto);
 
         btnActualizarCatalogo = new JButton("Recargar");
         btnActualizarCatalogo.setName("btnActualizarCatalogo");
+
+        panelControles.add(lblCantidad);
+        panelControles.add(spinnerCantidad);
+        panelControles.add(btnAgregarProducto);
         panelControles.add(btnActualizarCatalogo);
 
         panel.add(panelControles, BorderLayout.SOUTH);
@@ -110,27 +103,23 @@ public class ClienteVentasPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBorder(BorderFactory.createTitledBorder("Venta en Curso"));
 
-        String[] columnas = {"Código", "Producto", "Precio Unit.", "Cant.", "Subtotal"};
-        modeloPartidas = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        tablaPartidas = new JTable(modeloPartidas);
+        // Se enlaza directamente al PartidaTableModel separable del controlador
+        tablaPartidas = new JTable(ventaController.getModeloPartidas());
         tablaPartidas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaPartidas.setName("tablaPartidas");
+
         JScrollPane scroll = new JScrollPane(tablaPartidas);
         panel.add(scroll, BorderLayout.CENTER);
 
-        // Panel de totales y botones de la venta
         JPanel panelDerechoSur = new JPanel(new BorderLayout(6, 6));
-
         JPanel panelBotonesVenta = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+
         btnQuitarPartida = new JButton("Quitar Selección");
         btnQuitarPartida.setName("btnQuitarPartida");
+
         btnLimpiarVenta = new JButton("Limpiar Venta");
         btnLimpiarVenta.setName("btnLimpiarVenta");
+
         panelBotonesVenta.add(btnQuitarPartida);
         panelBotonesVenta.add(btnLimpiarVenta);
         panelDerechoSur.add(panelBotonesVenta, BorderLayout.NORTH);
@@ -166,6 +155,7 @@ public class ClienteVentasPanel extends JPanel {
         JPanel panelEstado = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         lblEstado = new JLabel("Listo");
         lblEstado.setName("lblEstado");
+
         barraProgreso = new JProgressBar();
         barraProgreso.setName("barraProgreso");
         barraProgreso.setIndeterminate(true);
@@ -186,23 +176,43 @@ public class ClienteVentasPanel extends JPanel {
         return panel;
     }
 
+private void configurarAccesibilidad() {
+        btnAgregarProducto.setMnemonic(KeyEvent.VK_A); 
+        btnAgregarProducto.setText("Agregar a la Venta"); 
+        btnAgregarProducto.getAccessibleContext().setAccessibleName("Agregar producto seleccionado a la venta");
+
+        btnActualizarCatalogo.setMnemonic(KeyEvent.VK_R); 
+        btnActualizarCatalogo.getAccessibleContext().setAccessibleName("Recargar catálogo de productos");
+
+        btnQuitarPartida.setMnemonic(KeyEvent.VK_Q);
+        btnQuitarPartida.getAccessibleContext().setAccessibleName("Quitar partida seleccionada de la venta");
+
+        btnLimpiarVenta.setMnemonic(KeyEvent.VK_L); 
+        btnLimpiarVenta.getAccessibleContext().setAccessibleName("Limpiar todas las partidas de la venta");
+
+        btnRegistrarVenta.setMnemonic(KeyEvent.VK_V); 
+        btnRegistrarVenta.getAccessibleContext().setAccessibleName("Confirmar y registrar la venta actual");
+
+        tablaProductos.getAccessibleContext().setAccessibleName("Tabla de catálogo de productos disponibles");
+        tablaPartidas.getAccessibleContext().setAccessibleName("Tabla de partidas en la venta actual");
+        spinnerCantidad.getAccessibleContext().setAccessibleName("Cantidad de producto a agregar");
+    }
+
     private void configurarEventos() {
         btnActualizarCatalogo.addActionListener(e -> cargarCatalogo());
 
         btnAgregarProducto.addActionListener(e -> {
             int filaSeleccionada = tablaProductos.getSelectedRow();
-            if (filaSeleccionada < 0 || filaSeleccionada >= listaProductosActual.size()) {
+            CatalogoDTO productoSeleccionado = catalogoController.obtenerProductoEnFila(filaSeleccionada);
+            if (productoSeleccionado == null) {
                 mostrarMensajeError("Debe seleccionar un producto del catálogo.");
                 return;
             }
-
-            Producto producto = listaProductosActual.get(filaSeleccionada);
             int cantidad = (Integer) spinnerCantidad.getValue();
-
             try {
-                controller.agregarProducto(producto, cantidad);
-                actualizarTablaPartidas();
-                setEstado("Producto agregado a la venta: " + producto.getNombre(), false);
+                ventaController.agregarProducto(productoSeleccionado, cantidad);
+                actualizarEtiquetasTotales();
+                setEstado("Producto agregado a la venta: " + productoSeleccionado.getNombre(), false);
             } catch (IllegalArgumentException ex) {
                 mostrarMensajeError(ex.getMessage());
             }
@@ -215,8 +225,8 @@ public class ClienteVentasPanel extends JPanel {
                 return;
             }
             try {
-                controller.eliminarPartida(filaSeleccionada);
-                actualizarTablaPartidas();
+                ventaController.eliminarPartida(filaSeleccionada);
+                actualizarEtiquetasTotales();
                 setEstado("Partida eliminada.", false);
             } catch (Exception ex) {
                 mostrarMensajeError(ex.getMessage());
@@ -224,8 +234,8 @@ public class ClienteVentasPanel extends JPanel {
         });
 
         btnLimpiarVenta.addActionListener(e -> {
-            controller.limpiarVenta();
-            actualizarTablaPartidas();
+            ventaController.limpiarVenta();
+            actualizarEtiquetasTotales();
             setEstado("Venta reiniciada.", false);
         });
 
@@ -234,10 +244,9 @@ public class ClienteVentasPanel extends JPanel {
 
     public void cargarCatalogo() {
         setEnProgreso(true, "Consultando catálogo de productos...");
-        controller.cargarProductos(
-                productos -> {
-                    setEnProgreso(false, "Catálogo cargado con éxito (" + productos.size() + " productos).");
-                    actualizarTablaProductos(productos);
+        catalogoController.cargarProductos(
+                cantidadProductos -> {
+                    setEnProgreso(false, "Catálogo cargado con éxito (" + cantidadProductos + " productos).");
                 },
                 error -> {
                     setEnProgreso(false, "Error: " + error);
@@ -247,18 +256,17 @@ public class ClienteVentasPanel extends JPanel {
     }
 
     private void ejecutarRegistroVenta() {
-        if (controller.getPartidas().isEmpty()) {
+        if (!ventaController.tienePartidas()) {
             mostrarMensajeError("No se puede registrar una venta sin partidas.");
             return;
         }
-
         setEnProgreso(true, "Registrando venta en el sistema...");
-        controller.registrarVenta(
-                ventaGuardada -> {
+        ventaController.registrarVenta(
+                totalCobrado -> {
                     setEnProgreso(false, "Venta registrada con éxito.");
-                    actualizarTablaPartidas();
+                    actualizarEtiquetasTotales();
                     mostrarMensajeExito("¡Venta registrada con éxito!\nTotal cobrado: "
-                            + formatoMoneda.format(ventaGuardada.calcularTotal()));
+                            + formatoMoneda.format(totalCobrado));
                     cargarCatalogo();
                 },
                 error -> {
@@ -268,38 +276,9 @@ public class ClienteVentasPanel extends JPanel {
         );
     }
 
-    public void actualizarTablaProductos(List<Producto> productos) {
-        listaProductosActual.clear();
-        modeloProductos.setRowCount(0);
-        if (productos != null) {
-            listaProductosActual.addAll(productos);
-            for (Producto p : productos) {
-                modeloProductos.addRow(new Object[]{
-                        p.getCodigo(),
-                        p.getNombre(),
-                        formatoMoneda.format(p.getPrecio()),
-                        p.getExistencia()
-                });
-            }
-        }
-    }
-
-    public void actualizarTablaPartidas() {
-        modeloPartidas.setRowCount(0);
-        List<Partida> partidas = controller.getPartidas();
-        for (Partida p : partidas) {
-            modeloPartidas.addRow(new Object[]{
-                    p.getProducto().getCodigo(),
-                    p.getProducto().getNombre(),
-                    formatoMoneda.format(p.getProducto().getPrecio()),
-                    p.getCantidad(),
-                    formatoMoneda.format(p.getSubtotal())
-            });
-        }
-
-        double subtotal = controller.calcularSubtotal();
-        int totalArticulos = controller.getCantidadTotalArticulos();
-
+    public void actualizarEtiquetasTotales() {
+        double subtotal = ventaController.calcularSubtotal();
+        int totalArticulos = ventaController.getCantidadTotalArticulos();
         lblTotalArticulos.setText("Artículos en carrito: " + totalArticulos);
         lblSubtotal.setText("Subtotal: " + formatoMoneda.format(subtotal));
         lblTotal.setText("Total: " + formatoMoneda.format(subtotal));
@@ -333,8 +312,12 @@ public class ClienteVentasPanel extends JPanel {
         }
     }
 
-    public VentaController getController() {
-        return controller;
+    public CatalogoController getCatalogoController() {
+        return catalogoController;
+    }
+
+    public VentaController getVentaController() {
+        return ventaController;
     }
 
     public JTable getTablaProductos() {
@@ -345,12 +328,12 @@ public class ClienteVentasPanel extends JPanel {
         return tablaPartidas;
     }
 
-    public DefaultTableModel getModeloProductos() {
-        return modeloProductos;
+    public ProductoTableModel getModeloProductos() {
+        return catalogoController.getModeloProductos();
     }
 
-    public DefaultTableModel getModeloPartidas() {
-        return modeloPartidas;
+    public PartidaTableModel getModeloPartidas() {
+        return ventaController.getModeloPartidas();
     }
 
     public JButton getBtnAgregarProducto() {

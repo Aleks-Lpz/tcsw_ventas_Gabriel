@@ -28,7 +28,7 @@ public class ProductoService implements RegistrarProductoUseCase, ConsultarProdu
 
     @Override
     public List<Producto> consultarTodos() {
-        return productoRepository.obtenerTodos();
+    return productoRepository.obtenerTodos();
     }
 }
 
