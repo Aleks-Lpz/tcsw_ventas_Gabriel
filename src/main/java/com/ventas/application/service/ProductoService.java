@@ -1,10 +1,13 @@
 package com.ventas.application.service;
 
+import com.ventas.application.port.in.ConsultarProductosUseCase;
 import com.ventas.application.port.in.RegistrarProductoUseCase;
 import com.ventas.application.port.out.ProductoRepository;
 import com.ventas.model.Producto;
 
-public class ProductoService implements RegistrarProductoUseCase {
+import java.util.List;
+
+public class ProductoService implements RegistrarProductoUseCase, ConsultarProductosUseCase {
 
     private final ProductoRepository productoRepository;
 
@@ -21,6 +24,11 @@ public class ProductoService implements RegistrarProductoUseCase {
             throw new IllegalArgumentException("El producto no puede ser nulo.");
         }
         return productoRepository.guardar(producto);
+    }
+
+    @Override
+    public List<Producto> consultarTodos() {
+    return productoRepository.obtenerTodos();
     }
 }
 
