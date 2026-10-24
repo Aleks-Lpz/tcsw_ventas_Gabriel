@@ -192,3 +192,14 @@ Esto indica que los archivos nuevos de la contribución P05 quedaron sin confirm
 | `git diff --check` | VERIFICADO | no produjo salida, sin errores de diff |
 
 Se detectaron artefactos no tratados por la actividad en `src/main/java/com/ventas/model/Partida.javamicro` y `src/main/java/com/ventas/model/com/ventas/model/Producto.class`; no fueron modificados, siguiendo la restricción del proyecto.
+# P08 - Persistencia con JDBC y PostgreSQL 16
+
+Adaptador `JdbcVentaRepository` (venta + partidas en una sola transacción). Guía completa: [`docs/P08-Persistencia-Venta.md`](docs/P08-Persistencia-Venta.md).
+
+```bash
+cp .env.example .env           # cambiar el password
+docker compose up -d           # PostgreSQL 16 + db/schema.sql
+set -a; source .env; set +a
+mvn clean verify               # unitarias + integración (*IT)
+docker compose down -v
+```
