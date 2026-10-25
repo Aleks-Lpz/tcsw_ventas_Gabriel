@@ -2,25 +2,30 @@ package com.ventas.adapter.in.swing.view;
 
 import com.ventas.adapter.in.swing.controller.CatalogoController;
 import com.ventas.adapter.in.swing.controller.VentaController;
-import com.ventas.adapter.out.memory.InMemoryProductoRepository;
-import com.ventas.adapter.out.memory.InMemoryVentaRepository;
+import com.ventas.adapter.out.jdbc.ConfiguracionJdbc;
+import com.ventas.adapter.out.jdbc.JdbcProductoRepository;
+import com.ventas.adapter.out.jdbc.JdbcVentaRepository;
 import com.ventas.adapter.out.notification.ReciboObservador;
 import com.ventas.application.port.in.ConsultarProductosUseCase;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
+import com.ventas.application.port.out.ProductoRepository;
+import com.ventas.application.port.out.VentaRepository;
 import com.ventas.application.service.ProductoService;
 import com.ventas.application.service.PublicadorSimple;
 import com.ventas.application.service.RegistrarVentaService;
 import com.ventas.model.PoliticaDescuento;
-import com.ventas.model.Producto;
 
+import javax.sql.DataSource;
 import javax.swing.*;
 
 public class ClienteVentasApp {
 
     public static void main(String[] args) {
+        ConfiguracionJdbc configuracion = ConfiguracionJdbc.desdeEntorno().orElseThrow();
+        DataSource dataSource = configuracion.crearDataSource();
         // Inicializar repositorios y servicios
-        InMemoryProductoRepository productoRepository = new InMemoryProductoRepository();
-        InMemoryVentaRepository ventaRepository = new InMemoryVentaRepository();
+        ProductoRepository productoRepository = new JdbcProductoRepository(dataSource);
+        VentaRepository ventaRepository = new JdbcVentaRepository(dataSource);
 
         PublicadorSimple publicador = new PublicadorSimple();
         publicador.agregarObservador(new ReciboObservador());
@@ -34,10 +39,6 @@ public class ClienteVentasApp {
 
         ProductoService productoService = new ProductoService(productoRepository);
         RegistrarVentaService registrarVentaService = new RegistrarVentaService(ventaRepository, politicaDescuento, publicador);
-
-        // Cargar productos iniciales de demostración
-        cargarDatosDePrueba(productoService);
-
         // Iniciar la interfaz en el Event Dispatch Thread (EDT)
         iniciarCliente(productoService, registrarVentaService);
     }
@@ -78,11 +79,4 @@ private static ClienteVentasSwingFrame crearYMostrarVentana(CatalogoController c
         }
     }
 
-    private static void cargarDatosDePrueba(ProductoService productoService) {
-        productoService.registrar(new Producto("P001", "Laptop Gamer 16GB", 21500.00, 6));
-        productoService.registrar(new Producto("P002", "Teclado Mecánico RGB", 1250.00, 15));
-        productoService.registrar(new Producto("P003", "Mouse Ergonómico", 480.00, 20));
-        productoService.registrar(new Producto("P004", "Monitor 27 Pulgadas IPS", 4600.00, 8));
-        productoService.registrar(new Producto("P005", "Audífonos Inalámbricos", 890.00, 12));
-    }
 }
