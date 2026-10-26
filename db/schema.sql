@@ -27,3 +27,4 @@ CREATE TABLE IF NOT EXISTS partida (
 );
 
 CREATE INDEX IF NOT EXISTS idx_partida_venta ON partida (venta_id);
+
