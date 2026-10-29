@@ -12,6 +12,13 @@ public class Venta {
         this.partidas = new ArrayList<>();
     }
 
+    public Venta(List<Partida> partidas, double descuento) {
+        this.partidas = partidas;
+        this.descuento = descuento;
+    }
+
+
+
     public void agregarPartida(Partida partida) {
         if (partida == null) {
             throw new IllegalArgumentException("La partida no puede ser nula.");
@@ -38,5 +45,9 @@ public class Venta {
         } else {
         throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
         }
+    }
+
+    public double getDescuento() {
+        return this.descuento;
     }
 }
