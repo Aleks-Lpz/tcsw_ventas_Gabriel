@@ -1,2 +1,8 @@
 target/
 .env
+
+# Binarios compilados nunca van al arbol de fuentes
+*.class
+
+# Logs de ./scripts/verify-module.sh
+.verify/
