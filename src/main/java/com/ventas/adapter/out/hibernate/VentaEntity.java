@@ -42,6 +42,17 @@ public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecima
             this.partidas=partidas;
     }
 
+
+
+public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecimal total) {
+    this.id = id;
+    this.fecha = fecha;
+    this.descuento = descuento;
+    this.total = total;
+}
+
+
+
 public VentaEntity() {
 
 }
