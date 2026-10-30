@@ -3,7 +3,6 @@ package com.ventas.adapter.out.hibernate;
 import java.math.BigDecimal;
 
 import com.ventas.model.Partida;
-import com.ventas.model.Venta;
 
 public class PartidaMapper {
 
