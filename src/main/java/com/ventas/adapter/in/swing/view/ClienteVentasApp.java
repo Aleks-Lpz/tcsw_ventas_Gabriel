@@ -2,9 +2,8 @@ package com.ventas.adapter.in.swing.view;
 
 import com.ventas.adapter.in.swing.controller.CatalogoController;
 import com.ventas.adapter.in.swing.controller.VentaController;
-import com.ventas.adapter.out.jdbc.ConfiguracionJdbc;
-import com.ventas.adapter.out.jdbc.JdbcProductoRepository;
-import com.ventas.adapter.out.jdbc.JdbcVentaRepository;
+import com.ventas.adapter.out.hibernate.HibernateProductoRepository;
+import com.ventas.adapter.out.hibernate.HibernateVentaRepository;
 import com.ventas.adapter.out.notification.ReciboObservador;
 import com.ventas.application.port.in.ConsultarProductosUseCase;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
@@ -15,17 +14,19 @@ import com.ventas.application.service.PublicadorSimple;
 import com.ventas.application.service.RegistrarVentaService;
 import com.ventas.model.PoliticaDescuento;
 
-import javax.sql.DataSource;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+
 import javax.swing.*;
 
 public class ClienteVentasApp {
 
     public static void main(String[] args) {
-        ConfiguracionJdbc configuracion = ConfiguracionJdbc.desdeEntorno().orElseThrow();
-        DataSource dataSource = configuracion.crearDataSource();
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("VentasPU");
+       
         // Inicializar repositorios y servicios
-        ProductoRepository productoRepository = new JdbcProductoRepository(dataSource);
-        VentaRepository ventaRepository = new JdbcVentaRepository(dataSource);
+        ProductoRepository productoRepository = new HibernateProductoRepository(entityManagerFactory);
+        VentaRepository ventaRepository = new HibernateVentaRepository(entityManagerFactory);
 
         PublicadorSimple publicador = new PublicadorSimple();
         publicador.agregarObservador(new ReciboObservador());
