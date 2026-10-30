@@ -59,3 +59,103 @@ Ejecuté todas las pruebas del proyecto contra PostgreSQL 16.15: **73 de 73 en v
 | Issue | Implementación | Commits | PR | Pruebas |
 |---|---|---|---|---|
 | #ISSUE | `db/schema.sql`, `docker-compose.yml`, `adapter/out/jdbc/*` | `75e1d0a`, `81cb0f4`, `b59af62` | #PR | 13/13 PASS |
+
+## 9. C02 — Consistencia transaccional del inventario (issue #40)
+
+> Esta sección va después de la de reproducibilidad (#35); las dos son mi parte de C02.
+
+Terminada la parte de reproducibilidad me puse a seguir el recorrido completo
+guardar-consultar con la base reconstruida, y encontré que la venta se guardaba bien pero
+el catálogo no se movía nunca. `JdbcVentaRepository` insertaba `venta` y `partida` dentro
+de la transacción y commiteaba sin tocar `producto.existencia`. Vendí 1000 piezas de un
+producto que tenía 40 en catálogo y la operación commiteó sin un solo error.
+
+Lo peor no era la sobreventa, era dónde vivía la regla: la única validación estaba en
+`VentaController.agregarProducto()`, comparando contra la existencia que traía el DTO
+cargado al abrir la ventana, y sólo cuando era mayor a cero. Con dos ventanas abiertas las
+dos pasaban la validación y las dos commiteaban.
+
+Visto con lo de M11: la transacción era atómica pero incompleta. Garantizaba que la venta y
+sus partidas entraran juntas, pero la unidad de trabajo del negocio incluye un tercer
+efecto —mover el inventario— que se estaba quedando fuera del commit.
+
+### Lo que hice
+
+Metí el descuento en la misma transacción, con un `UPDATE` por producto cuya condición
+viaja en el `WHERE`:
+
+```sql
+UPDATE producto SET existencia = existencia - ?
+ WHERE codigo = ? AND existencia >= ?
+RETURNING existencia
+```
+
+Agregué `ExistenciaInsuficienteException` en `com.ventas.model`, con `codigo`,
+`solicitado` y `disponible`, y escribí 12 pruebas: 5 unitarias y 7 de integración.
+
+### Decisiones que tomé y por qué
+
+- **La condición va en el `WHERE`, no en un `SELECT` previo.** Lo primero que escribí fue
+  leer la existencia, compararla en Java y después actualizar. Lo tiré: entre la lectura y
+  la escritura hay una ventana en la que dos transacciones leen 40, las dos concluyen que
+  caben 30 y las dos actualizan. Poniendo la condición en el `WHERE`, la segunda espera el
+  lock del renglón y, cuando lo obtiene, ya ve el valor descontado y no actualiza ninguna
+  fila. La decisión la toma la base, que es la única que ve el estado comprometido. El
+  `CHECK (existencia >= 0)` del esquema queda como segunda barrera, no como única.
+- **Los `UPDATE` ordenados por código de producto.** Así todas las ventas toman los locks
+  en el mismo orden y dos ventas con los mismos artículos en orden inverso no se pueden
+  interbloquear.
+- **Distinguí el error de negocio del de integridad.** Un `UPDATE` sin filas afectadas
+  tiene dos causas: el producto no existe (integridad, `PersistenciaException`) o existe y
+  no alcanza (regla de negocio, `ExistenciaInsuficienteException`). Puse la segunda en
+  `com.ventas.model` porque "no vender más de lo que hay" es del dominio, no de PostgreSQL;
+  el dominio sigue sin importar `java.sql`.
+- **No toqué el puerto ni el dominio existente,** ni `adapter.out.hibernate`, para no
+  chocar con los issues #32, #34 y #38 de mi compañero.
+
+### Pruebas
+
+Las de integración que ya existían cubrían rollbacks por violación de FK o de `CHECK`, es
+decir casos que la base rechaza sola. Ésta es la primera de una operación que la base
+**aceptaría** y que el negocio debe rechazar, que es el error controlado que pide R03.
+
+| Tipo | Prueba | Resultado |
+|---|---|---|
+| Positiva | `laVentaDescuentaLaExistenciaDelCatalogoEnLaMismaTransaccion` | 100 → 93 y 100 → 98 |
+| Límite | `unaVentaQueAgotaLaExistenciaExactaSeAceptaYDejaElCatalogoEnCero` | vender 100 de 100 deja 0 |
+| Negativa | `unaVentaQueExcedeLaExistenciaSeRechazaYNoDejaRastro` | sin venta, sin partidas, existencias intactas |
+| Negativa | `unRollbackPorIntegridadTampocoMueveElInventario` | la existencia vuelve a su valor |
+
+`mvn clean verify` contra PostgreSQL 16 en contenedor: **88 de 88 en verde** (70 unitarias y
+18 de integración), sin romper nada de lo que ya estaba.
+
+### Revisión que hice
+
+Revisé los tres PRs de Hibernate de mi compañero (#33, #37 y #39) leyendo el mapeo contra
+`db/schema.sql` y contra lo que ya hace el adaptador JDBC. Reporté dos cosas que considero
+bloqueantes: `toModelPartida` reconstruye la partida con el precio actual del producto e
+ignora la columna `precio_unitario`, así que al leer una venta vieja el total se recalcula
+con el precio de hoy y deja de coincidir con el `total` guardado; y el constructor nuevo
+`Venta(List<Partida>, double)` asigna sus campos sin validar, de modo que `new Venta(null,
+-500)` es un objeto válido y se abre un segundo camino de construcción que `VentaFactory`
+(#17) existía para evitar. Además señalé la fecha tomada del reloj de la JVM en lugar del
+motor, el redondeo del dinero a dos decimales, las FK sin `nullable = false`, la lista de
+partidas sin inicializar, la falta de `equals`/`hashCode` y la ausencia de pruebas de los
+mapeadores, que son el sitio más fácil de probar porque son estáticos y puros.
+
+### Estado
+
+| Elemento | Estado |
+|---|---|
+| Descuento transaccional y rollback con existencias intactas | VERIFICADO |
+| `mvn clean verify` completo | VERIFICADO: 88/88 con Docker y PostgreSQL 16 |
+| Concurrencia real con dos cajas simultáneas | NO_VERIFICADO: la garantía viene del lock de renglón y del orden determinista de los `UPDATE`, pero no escribí una prueba concurrente |
+| Reporte de Sonar | PENDIENTE al integrar en `main` |
+| Equivalente en el adaptador Hibernate | PENDIENTE y fuera de mi alcance (#32, #34, #38) |
+
+### Trazabilidad
+
+| Issue | Implementación | Commits | PR | Pruebas | Docs |
+|---|---|---|---|---|---|
+| #40 | `model/ExistenciaInsuficienteException.java`, `adapter/out/jdbc/JdbcVentaRepository.java` | ver PR | #42 | 12 nuevas, 88/88 en total | [`docs/C02-Inventario-Transaccional.md`](../C02-Inventario-Transaccional.md) |
+| (revisión) | revisión de los PRs de Hibernate de mi compañero | — | #39 | — | §9 de este documento |
