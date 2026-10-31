@@ -191,15 +191,42 @@ Esto indica que los archivos nuevos de la contribución P05 quedaron sin confirm
 | `mvn clean test` | VERIFICADO | resultado real mostrado arriba |
 | `git diff --check` | VERIFICADO | no produjo salida, sin errores de diff |
 
-Se detectaron artefactos no tratados por la actividad en `src/main/java/com/ventas/model/Partida.javamicro` y `src/main/java/com/ventas/model/com/ventas/model/Producto.class`; no fueron modificados, siguiendo la restricción del proyecto.
+Se detectaron artefactos no tratados por la actividad en `src/main/java/com/ventas/model/Partida.javamicro` y `src/main/java/com/ventas/model/com/ventas/model/Producto.class`; no fueron modificados, siguiendo la restricción del proyecto. **Actualización (C02, issue #35):** ambos se eliminaron como deuda técnica y `.gitignore` ahora bloquea cualquier `*.class`.
 # P08 - Persistencia con JDBC y PostgreSQL 16
 
 Adaptador `JdbcVentaRepository` (venta + partidas en una sola transacción). Guía completa: [`docs/P08-Persistencia-Venta.md`](docs/P08-Persistencia-Venta.md).
 
 ```bash
 cp .env.example .env           # cambiar el password
-docker compose up -d           # PostgreSQL 16 + db/schema.sql
+docker compose up -d           # PostgreSQL 16 + db/schema.sql + db/02-data.sql
 set -a; source .env; set +a
 mvn clean verify               # unitarias + integración (*IT)
 docker compose down -v
 ```
+
+# C02 - Verificación reproducible del módulo M11
+
+Un solo comando reconstruye la base desde cero, corre todas las pruebas y demuestra
+que los datos sobreviven a un reinicio del motor:
+
+```bash
+cp .env.example .env                 # cambiar el password (.env está en .gitignore)
+./scripts/verify-module.sh M11
+```
+
+El script recorre cinco pasos y se detiene en el primer error significativo, dejando
+el log completo en `.verify/verify-M11.log`:
+
+| Paso | Qué comprueba |
+|---|---|
+| 1. Esquema desde cero | `docker compose down -v && up -d`, espera `healthy`, confirma las 3 tablas y que la semilla cargó |
+| 2. Pruebas | `mvn clean verify` (unitarias + `*IT` con failsafe) |
+| 3. Semilla | la reaplica, porque los `*IT` hacen `TRUNCATE ... producto` y dejan el catálogo vacío |
+| 4. Guardar-consultar | confirma una venta con 2 partidas y comprueba que un error controlado (FK inválida) revierte la transacción completa |
+| 5. Persistencia | `docker compose restart` y vuelve a contar: antes/después deben coincidir |
+
+Si el puerto 5432 ya está ocupado por otro PostgreSQL local, cambia `POSTGRES_PORT`
+y `DB_URL` en `.env`; el script lo detecta y lo dice.
+
+Evidencia de la última ejecución y su relación con los criterios de R03:
+[`docs/C02-Verificacion.md`](docs/C02-Verificacion.md).
