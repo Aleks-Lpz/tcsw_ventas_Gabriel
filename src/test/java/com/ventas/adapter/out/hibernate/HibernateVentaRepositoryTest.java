@@ -8,166 +8,199 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
+import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HibernateVentaRepositoryTest {
 
     @Test
-    void testGuardar() {
-        FakeEntityManagerFactory factory = new FakeEntityManagerFactory();
-        HibernateVentaRepository repository = new HibernateVentaRepository(factory);
-        
-        Producto producto = new Producto("P001", "Test", 10.0, 5);
-        Partida partida = new Partida(producto, 1);
-        Venta venta = new Venta(Collections.singletonList(partida), 0.0);
-        
-        Venta resultado = repository.guardar(venta);
-
-        assertNotNull(resultado);
-        FakeEntityManager em = factory.getUltimoEntityManager();
-        assertNotNull(em);
-        assertEquals(1, em.getPersistedEntities().size());
-        
-        FakeEntityTransaction tx = (FakeEntityTransaction) em.getTransaction();
-        assertEquals(true, tx.isBegun());
-        assertEquals(true, tx.isCommitted());
-        assertEquals(true, em.isClosed());
+    void noSePuedeCrearSinEntityManagerFactory() {
+        assertThrows(NullPointerException.class, () -> new HibernateVentaRepository(null));
     }
-    
-    // Clases Fake para simular el comportamiento de JPA sin Mockito
-    private static class FakeEntityManagerFactory implements EntityManagerFactory {
-        private FakeEntityManager ultimoEntityManager;
-        
-        @Override
-        public EntityManager createEntityManager() {
-            ultimoEntityManager = new FakeEntityManager();
-            return ultimoEntityManager;
-        }
-        
-        public FakeEntityManager getUltimoEntityManager() {
-            return ultimoEntityManager;
-        }
 
-        // Métodos no implementados requeridos por la interfaz...
-        @Override public void close() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean isOpen() { return true; }
-        @Override public EntityManager createEntityManager(java.util.Map map) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.criteria.CriteriaBuilder getCriteriaBuilder() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.metamodel.Metamodel getMetamodel() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public java.util.Map<String, Object> getProperties() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Cache getCache() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.PersistenceUnitUtil getPersistenceUnitUtil() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void addNamedQuery(String name, jakarta.persistence.Query query) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T unwrap(Class<T> cls) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> void addNamedEntityGraph(String graphName, jakarta.persistence.EntityGraph<T> entityGraph) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public EntityManager createEntityManager(jakarta.persistence.SynchronizationType synchronizationType) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public EntityManager createEntityManager(jakarta.persistence.SynchronizationType synchronizationType, java.util.Map map) { throw new UnsupportedOperationException("No soportado en Fake"); }
+    @Test
+    void unaVentaNullSeRechazaSinAbrirEntityManager() {
+        AtomicInteger aperturas = new AtomicInteger();
+        HibernateVentaRepository repositorio = new HibernateVentaRepository(emfQueCuenta(aperturas));
+
+        assertThrows(IllegalArgumentException.class, () -> repositorio.guardar(null));
+        assertEquals(0, aperturas.get());
     }
-    
-    private static class FakeEntityManager implements EntityManager {
-        private final FakeEntityTransaction tx = new FakeEntityTransaction();
-        private final java.util.List<Object> persistedEntities = new java.util.ArrayList<>();
-        private boolean closed = false;
-        
-        @Override
-        public EntityTransaction getTransaction() {
-            return tx;
-        }
-        
-        @Override
-        public void persist(Object entity) {
-            persistedEntities.add(entity);
-            // Simulamos que la BD le asignó un ID
-            if (entity instanceof VentaEntity) {
-                ((VentaEntity) entity).setId(1L);
-            }
-        }
-        
-        @Override
-        public <T> T find(Class<T> entityClass, Object primaryKey) {
-            if (!persistedEntities.isEmpty() && entityClass.isInstance(persistedEntities.get(0))) {
-                return (T) persistedEntities.get(0);
-            }
-            return null;
-        }
-        
-        @Override
-        public void close() {
-            closed = true;
-        }
-        
-        public java.util.List<Object> getPersistedEntities() {
-            return persistedEntities;
-        }
-        
-        public boolean isClosed() {
-            return closed;
-        }
 
-        // Métodos no implementados requeridos por la interfaz...
-        @Override public <T> T merge(T entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void remove(Object entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T find(Class<T> entityClass, Object primaryKey, java.util.Map<String, Object> properties) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T find(Class<T> entityClass, Object primaryKey, jakarta.persistence.LockModeType lockMode) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T find(Class<T> entityClass, Object primaryKey, jakarta.persistence.LockModeType lockMode, java.util.Map<String, Object> properties) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T getReference(Class<T> entityClass, Object primaryKey) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void flush() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void setFlushMode(jakarta.persistence.FlushModeType flushMode) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.FlushModeType getFlushMode() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void lock(Object entity, jakarta.persistence.LockModeType lockMode) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void lock(Object entity, jakarta.persistence.LockModeType lockMode, java.util.Map<String, Object> properties) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void refresh(Object entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void refresh(Object entity, java.util.Map<String, Object> properties) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void refresh(Object entity, jakarta.persistence.LockModeType lockMode) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void refresh(Object entity, jakarta.persistence.LockModeType lockMode, java.util.Map<String, Object> properties) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void clear() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void detach(Object entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean contains(Object entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.LockModeType getLockMode(Object entity) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void setProperty(String propertyName, Object value) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public java.util.Map<String, Object> getProperties() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createQuery(String qlString) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> jakarta.persistence.TypedQuery<T> createQuery(jakarta.persistence.criteria.CriteriaQuery<T> criteriaQuery) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createQuery(jakarta.persistence.criteria.CriteriaUpdate updateQuery) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createQuery(jakarta.persistence.criteria.CriteriaDelete deleteQuery) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> jakarta.persistence.TypedQuery<T> createQuery(String qlString, Class<T> resultClass) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createNamedQuery(String name) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> jakarta.persistence.TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createNativeQuery(String sqlString) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createNativeQuery(String sqlString, Class resultClass) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.Query createNativeQuery(String sqlString, String resultSetMapping) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.StoredProcedureQuery createNamedStoredProcedureQuery(String name) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.StoredProcedureQuery createStoredProcedureQuery(String procedureName) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void joinTransaction() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean isJoinedToTransaction() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> T unwrap(Class<T> cls) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public Object getDelegate() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean isOpen() { return true; }
-        @Override public jakarta.persistence.EntityManagerFactory getEntityManagerFactory() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.criteria.CriteriaBuilder getCriteriaBuilder() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.metamodel.Metamodel getMetamodel() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> jakarta.persistence.EntityGraph<T> createEntityGraph(Class<T> rootType) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.EntityGraph<?> createEntityGraph(String graphName) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public jakarta.persistence.EntityGraph<?> getEntityGraph(String graphName) { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public <T> java.util.List<jakarta.persistence.EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) { throw new UnsupportedOperationException("No soportado en Fake"); }
+    @Test
+    void unaVentaSinPartidasSeRechazaSinAbrirEntityManager() {
+        AtomicInteger aperturas = new AtomicInteger();
+        HibernateVentaRepository repositorio = new HibernateVentaRepository(emfQueCuenta(aperturas));
+
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> repositorio.guardar(new Venta()));
+        assertTrue(error.getMessage().contains("sin partidas"));
+        assertEquals(0, aperturas.get());
     }
-    
-    private static class FakeEntityTransaction implements EntityTransaction {
-        private boolean begun = false;
-        private boolean committed = false;
 
-        @Override public void begin() { begun = true; }
-        @Override public void commit() { committed = true; }
-        public boolean isBegun() { return begun; }
-        public boolean isCommitted() { return committed; }
-        @Override public void rollback() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public void setRollbackOnly() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean getRollbackOnly() { throw new UnsupportedOperationException("No soportado en Fake"); }
-        @Override public boolean isActive() { return begun && !committed; }
+    @Test
+    void guardarPersisteEnUnaTransaccionYCierraElEntityManager() {
+        AtomicBoolean iniciada = new AtomicBoolean(false);
+        AtomicBoolean confirmada = new AtomicBoolean(false);
+        AtomicBoolean cerrado = new AtomicBoolean(false);
+        AtomicBoolean usoGetReference = new AtomicBoolean(false);
+
+        EntityManagerFactory emf = crearEmfSimulado(iniciada, confirmada, new AtomicBoolean(), cerrado, usoGetReference, false);
+        HibernateVentaRepository repositorio = new HibernateVentaRepository(emf);
+
+        Producto producto = new Producto("P001", "Teclado", 250.556, 10);
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(producto, 2));
+        venta.aplicarDescuento(10.0);
+
+        Venta guardada = repositorio.guardar(venta);
+
+        assertSame(venta, guardada);
+        assertTrue(iniciada.get());
+        assertTrue(confirmada.get());
+        assertTrue(usoGetReference.get());
+        assertTrue(cerrado.get());
+    }
+
+    @Test
+    void siPersistFallaHaceRollbackYCierraElEntityManager() {
+        AtomicBoolean iniciada = new AtomicBoolean(false);
+        AtomicBoolean confirmada = new AtomicBoolean(false);
+        AtomicBoolean revertida = new AtomicBoolean(false);
+        AtomicBoolean cerrado = new AtomicBoolean(false);
+
+        EntityManagerFactory emf = crearEmfSimulado(iniciada, confirmada, revertida, cerrado, new AtomicBoolean(), true);
+        HibernateVentaRepository repositorio = new HibernateVentaRepository(emf);
+
+        Producto producto = new Producto("P001", "Teclado", 100.0, 5);
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(producto, 1));
+
+        assertThrows(RuntimeException.class, () -> repositorio.guardar(venta));
+        assertTrue(iniciada.get());
+        assertFalse(confirmada.get());
+        assertTrue(revertida.get());
+        assertTrue(cerrado.get());
+    }
+
+    @Test
+    void ventaMapperReconstruyeElModeloRespetandoInvariantes() {
+        Producto producto = new Producto("P001", "Mouse", 120.456, 8);
+        Venta original = new Venta();
+        original.agregarPartida(new Partida(producto, 2));
+        original.aplicarDescuento(15.0);
+
+        VentaEntity entity = VentaMapper.toEntity(original, codigo -> ProductoMapper.toEntity(producto));
+        assertEquals(new BigDecimal("15.00"), entity.getDescuento());
+        assertEquals(new BigDecimal("225.91"), entity.getTotal());
+
+        Venta reconstruida = VentaMapper.toModelVenta(entity);
+        assertEquals(1, reconstruida.getPartidas().size());
+        assertEquals(15.0, reconstruida.getDescuento());
+        // Verifica que la lista interna de la venta reconstruida sigue siendo mutable a través de agregarPartida
+        reconstruida.agregarPartida(new Partida(producto, 1));
+        assertEquals(2, reconstruida.getPartidas().size());
+    }
+
+    @Test
+    void laConfiguracionEsVaciaSiFaltaAlgunaVariable() {
+        assertTrue(ConfiguracionHibernate.desde(Map.of()).isEmpty());
+        assertTrue(ConfiguracionHibernate.desde(Map.of("DB_URL", "jdbc:postgresql://localhost/x")).isEmpty());
+    }
+
+    @Test
+    void laConfiguracionNuncaMuestraElPassword() {
+        ConfiguracionHibernate configuracion = ConfiguracionHibernate.desde(Map.of(
+                "DB_URL", "jdbc:postgresql://localhost:5432/ventas",
+                "DB_USER", "ventas_app",
+                "DB_PASSWORD", "secreto-sintetico")).orElseThrow();
+
+        assertFalse(configuracion.toString().contains("secreto-sintetico"));
+        assertTrue(configuracion.toString().contains("***"));
+    }
+
+    private static EntityManagerFactory emfQueCuenta(AtomicInteger contador) {
+        return (EntityManagerFactory) Proxy.newProxyInstance(
+                EntityManagerFactory.class.getClassLoader(),
+                new Class<?>[]{EntityManagerFactory.class},
+                (proxy, metodo, args) -> {
+                    if (metodo.getName().equals("createEntityManager")) {
+                        contador.incrementAndGet();
+                    }
+                    throw new UnsupportedOperationException("No se esperaba abrir el EntityManager");
+                });
+    }
+
+    private static EntityManagerFactory crearEmfSimulado(AtomicBoolean begun,
+                                                         AtomicBoolean committed,
+                                                         AtomicBoolean rolledBack,
+                                                         AtomicBoolean closed,
+                                                         AtomicBoolean usedGetRef,
+                                                         boolean fallarEnPersist) {
+        EntityTransaction tx = (EntityTransaction) Proxy.newProxyInstance(
+                EntityTransaction.class.getClassLoader(),
+                new Class<?>[]{EntityTransaction.class},
+                (proxy, metodo, args) -> {
+                    switch (metodo.getName()) {
+                        case "begin":
+                            begun.set(true);
+                            return null;
+                        case "commit":
+                            committed.set(true);
+                            return null;
+                        case "rollback":
+                            rolledBack.set(true);
+                            return null;
+                        case "isActive":
+                            return begun.get() && !committed.get() && !rolledBack.get();
+                        default:
+                            throw new UnsupportedOperationException(metodo.getName());
+                    }
+                });
+
+        EntityManager em = (EntityManager) Proxy.newProxyInstance(
+                EntityManager.class.getClassLoader(),
+                new Class<?>[]{EntityManager.class},
+                (proxy, metodo, args) -> {
+                    switch (metodo.getName()) {
+                        case "getTransaction":
+                            return tx;
+                        case "getReference":
+                            usedGetRef.set(true);
+                            return new ProductoEntity((String) args[1], "Ref", BigDecimal.TEN, 1);
+                        case "persist":
+                            if (fallarEnPersist) {
+                                throw new RuntimeException("Fallo simulado en persist");
+                            }
+                            if (args[0] instanceof VentaEntity) {
+                                ((VentaEntity) args[0]).setId(1L);
+                            }
+                            return null;
+                        case "close":
+                            closed.set(true);
+                            return null;
+                        default:
+                            throw new UnsupportedOperationException(metodo.getName());
+                    }
+                });
+
+        return (EntityManagerFactory) Proxy.newProxyInstance(
+                EntityManagerFactory.class.getClassLoader(),
+                new Class<?>[]{EntityManagerFactory.class},
+                (proxy, metodo, args) -> {
+                    if (metodo.getName().equals("createEntityManager")) {
+                        return em;
+                    }
+                    throw new UnsupportedOperationException(metodo.getName());
+                });
     }
 }

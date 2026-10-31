@@ -1,22 +1,31 @@
 package com.ventas.adapter.out.hibernate;
 
-import java.math.BigDecimal;
-
 import com.ventas.model.Producto;
 
-public class ProductoMapper {
-    
-    private ProductoMapper() {
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
+public final class ProductoMapper {
+
+    private ProductoMapper() {
     }
+
     public static ProductoEntity toEntity(Producto producto) {
-        BigDecimal bd = BigDecimal.valueOf(producto.getPrecio());
-        return new ProductoEntity(producto.getCodigo(), producto.getNombre(), 
-        bd, producto.getExistencia());
+        BigDecimal precio = BigDecimal.valueOf(producto.getPrecio()).setScale(2, RoundingMode.HALF_UP);
+        return new ProductoEntity(
+                producto.getCodigo(),
+                producto.getNombre(),
+                precio,
+                producto.getExistencia()
+        );
     }
 
     public static Producto toModel(ProductoEntity productoEntity) {
-        return new Producto(productoEntity.getCodigo(), productoEntity.getNombre(), 
-        productoEntity.getPrecio().doubleValue(), productoEntity.getExistencia());
+        return new Producto(
+                productoEntity.getCodigo(),
+                productoEntity.getNombre(),
+                productoEntity.getPrecio().doubleValue(),
+                productoEntity.getExistencia()
+        );
     }
 }

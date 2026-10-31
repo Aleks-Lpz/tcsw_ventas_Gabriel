@@ -1,8 +1,5 @@
 package com.ventas.adapter.out.hibernate;
 
-import java.math.BigDecimal;
-import java.time.ZonedDateTime;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,90 +9,86 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-@Entity 
-@ Table (name = "venta")
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.List;
 
+@Entity
+@Table(name = "venta")
 public class VentaEntity {
 
-@Id
-@GeneratedValue (strategy = GenerationType.IDENTITY)
-private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-@Column (name = "fecha", nullable = false)
-private ZonedDateTime fecha;
+    @Column(name = "fecha", nullable = false)
+    private ZonedDateTime fecha;
 
-@Column (name = "descuento", nullable = false)
-private BigDecimal descuento;
+    @Column(name = "descuento", nullable = false)
+    private BigDecimal descuento;
 
-@Column (name = "total", nullable = false)
-private BigDecimal total;
+    @Column(name = "total", nullable = false)
+    private BigDecimal total;
 
-@OneToMany (mappedBy = "ventaEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-private List<PartidaEntity> partidas;
+    @OneToMany(mappedBy = "ventaEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PartidaEntity> partidas;
 
-public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecimal total, 
-        List<PartidaEntity> partidas) {
-            this.id=id;
-            this.fecha=fecha;
-            this.descuento=descuento;
-            this.total=total;
-            this.partidas=partidas;
+    public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecimal total,
+                       List<PartidaEntity> partidas) {
+        this.id = id;
+        this.fecha = fecha;
+        this.descuento = descuento;
+        this.total = total;
+        this.partidas = partidas;
     }
 
+    public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecimal total) {
+        this.id = id;
+        this.fecha = fecha;
+        this.descuento = descuento;
+        this.total = total;
+    }
 
+    public VentaEntity() {
+    }
 
-public VentaEntity(Long id, ZonedDateTime fecha, BigDecimal descuento, BigDecimal total) {
-    this.id = id;
-    this.fecha = fecha;
-    this.descuento = descuento;
-    this.total = total;
-}
+    public Long getId() {
+        return id;
+    }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
 
+    public ZonedDateTime getFecha() {
+        return fecha;
+    }
 
-public VentaEntity() {
+    public void setFecha(ZonedDateTime fecha) {
+        this.fecha = fecha;
+    }
 
-}
+    public BigDecimal getDescuento() {
+        return descuento;
+    }
 
-public Long getId() {
-    return id;
-}
+    public void setDescuento(BigDecimal descuento) {
+        this.descuento = descuento;
+    }
 
-public void setId(Long id) {
-    this.id = id;
-}
+    public BigDecimal getTotal() {
+        return total;
+    }
 
-public ZonedDateTime getFecha() {
-    return fecha;
-}
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
 
-public void setFecha(ZonedDateTime fecha) {
-    this.fecha = fecha;
-}
+    public List<PartidaEntity> getPartidas() {
+        return partidas;
+    }
 
-public BigDecimal getDescuento() {
-    return descuento;
-}
-
-public void setDescuento(BigDecimal descuento) {
-    this.descuento = descuento;
-}
-
-public BigDecimal getTotal() {
-    return total;
-}
-
-public void setTotal(BigDecimal total) {
-    this.total = total;
-}
-
-public List<PartidaEntity> getPartidas() {
-    return partidas;
-}
-
-public void setPartidas(List<PartidaEntity> partidas) {
-    this.partidas = partidas;
-}
-
-
+    public void setPartidas(List<PartidaEntity> partidas) {
+        this.partidas = partidas;
+    }
 }

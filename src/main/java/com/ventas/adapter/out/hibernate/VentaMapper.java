@@ -1,38 +1,45 @@
 package com.ventas.adapter.out.hibernate;
 
-import java.math.BigDecimal;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.ventas.model.Partida;
 import com.ventas.model.Venta;
 
-public class VentaMapper {
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
+public final class VentaMapper {
 
     private VentaMapper() {
-
     }
 
-    public static VentaEntity toEntity(Venta venta) {
-        List<PartidaEntity> partidas = new ArrayList<PartidaEntity>();
-        VentaEntity ventaEntity = new VentaEntity(null, ZonedDateTime.now(),
-        BigDecimal.valueOf(venta.getDescuento()),BigDecimal.valueOf(venta.calcularTotal()));
-        for(Partida partida: venta.getPartidas()) {
-        PartidaEntity partidaEntity = PartidaMapper.toEntity(partida, ventaEntity,
-         ProductoMapper.toEntity(partida.getProducto()));
+    public static VentaEntity toEntity(Venta venta, Function<String, ProductoEntity> proveedorProducto) {
+        BigDecimal descuento = dinero(venta.getDescuento());
+        BigDecimal total = dinero(venta.calcularTotal());
+        VentaEntity ventaEntity = new VentaEntity(null, ZonedDateTime.now(), descuento, total);
 
-        partidas.add(partidaEntity);
+        List<PartidaEntity> partidas = new ArrayList<>();
+        for (Partida partida : venta.getPartidas()) {
+            ProductoEntity productoRef = proveedorProducto.apply(partida.getProducto().getCodigo());
+            PartidaEntity partidaEntity = PartidaMapper.toEntity(partida, ventaEntity, productoRef);
+            partidas.add(partidaEntity);
         }
         ventaEntity.setPartidas(partidas);
         return ventaEntity;
     }
 
     public static Venta toModelVenta(VentaEntity ventaEntity) {
-        List<Partida> partidas = new ArrayList<Partida>();
-        for(PartidaEntity partida: ventaEntity.getPartidas()) {
-            partidas.add(PartidaMapper.toModelPartida(partida));
+        Venta venta = new Venta();
+        for (PartidaEntity partidaEntity : ventaEntity.getPartidas()) {
+            venta.agregarPartida(PartidaMapper.toModelPartida(partidaEntity));
         }
-        return new Venta(partidas, ventaEntity.getDescuento().doubleValue());
+        venta.aplicarDescuento(ventaEntity.getDescuento().doubleValue());
+        return venta;
+    }
+
+    private static BigDecimal dinero(double valor) {
+        return BigDecimal.valueOf(valor).setScale(2, RoundingMode.HALF_UP);
     }
 }

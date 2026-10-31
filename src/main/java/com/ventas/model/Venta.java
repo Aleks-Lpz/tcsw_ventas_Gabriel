@@ -5,19 +5,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class Venta {
+
     private List<Partida> partidas;
     private double descuento;
 
     public Venta() {
         this.partidas = new ArrayList<>();
     }
-
-    public Venta(List<Partida> partidas, double descuento) {
-        this.partidas = partidas;
-        this.descuento = descuento;
-    }
-
-
 
     public void agregarPartida(Partida partida) {
         if (partida == null) {
@@ -40,10 +34,10 @@ public class Venta {
     }
 
     public void aplicarDescuento(Double descuento) {
-        if(descuento>=0) {
-        this.descuento=descuento;
+        if (descuento >= 0) {
+            this.descuento = descuento;
         } else {
-        throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
+            throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
         }
     }
 
