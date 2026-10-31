@@ -1,5 +1,6 @@
 package com.ventas.adapter.out.jdbc;
 
+import com.ventas.model.ExistenciaInsuficienteException;
 import com.ventas.model.Partida;
 import com.ventas.model.Producto;
 import com.ventas.model.Venta;
@@ -103,6 +104,7 @@ class JdbcVentaRepositoryIT {
         assertTrue(error.getMessage().contains("revirtio"));
         assertEquals(0, contarTabla("venta"), "No debe quedar la venta a medias");
         assertEquals(0, contarTabla("partida"), "No debe quedar ninguna partida");
+        assertEquals(100, existenciaDe("SIN-001"), "Tampoco debe quedar inventario descontado");
     }
 
     @Test
@@ -144,6 +146,101 @@ class JdbcVentaRepositoryIT {
         assertEquals(1, contarTabla("partida"));
     }
 
+
+    // ---- C02 / issue #40: consistencia transaccional del inventario ----
+
+    @Test
+    void laVentaDescuentaLaExistenciaDelCatalogoEnLaMismaTransaccion() throws SQLException {
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(cuaderno, 7));
+        venta.agregarPartida(new Partida(lapiz, 2));
+
+        repositorio.insertar(venta);
+
+        assertEquals(93, existenciaDe("SIN-001"), "El cuaderno debe bajar de 100 a 93");
+        assertEquals(98, existenciaDe("SIN-002"), "El lapiz debe bajar de 100 a 98");
+    }
+
+    @Test
+    void variasPartidasDelMismoProductoDescuentanUnaSolaVezElTotal() throws SQLException {
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(cuaderno, 4));
+        venta.agregarPartida(new Partida(cuaderno, 6));
+
+        repositorio.insertar(venta);
+
+        assertEquals(90, existenciaDe("SIN-001"));
+        assertEquals(2, contarTabla("partida"), "Las dos partidas se conservan como documento");
+    }
+
+    @Test
+    void unaVentaQueAgotaLaExistenciaExactaSeAceptaYDejaElCatalogoEnCero() throws SQLException {
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(cuaderno, 100));
+
+        repositorio.insertar(venta);
+
+        assertEquals(0, existenciaDe("SIN-001"), "El limite superior permitido es la existencia completa");
+        assertEquals(1, contarTabla("venta"));
+    }
+
+    @Test
+    void unaVentaQueExcedeLaExistenciaSeRechazaYNoDejaRastro() throws SQLException {
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(lapiz, 3));
+        venta.agregarPartida(new Partida(cuaderno, 101)); // 101 > 100 disponibles
+
+        ExistenciaInsuficienteException error =
+                assertThrows(ExistenciaInsuficienteException.class, () -> repositorio.guardar(venta));
+
+        assertEquals("SIN-001", error.getCodigo());
+        assertEquals(101, error.getSolicitado());
+        assertEquals(100, error.getDisponible());
+        assertEquals(0, contarTabla("venta"), "No debe quedar la venta");
+        assertEquals(0, contarTabla("partida"), "No debe quedar ninguna partida");
+        assertEquals(100, existenciaDe("SIN-001"), "La existencia del producto que fallo queda intacta");
+        assertEquals(100, existenciaDe("SIN-002"), "El descuento del producto anterior tambien se revierte");
+    }
+
+    @Test
+    void laSobreventaEsUnErrorDeNegocioYNoDeInfraestructura() {
+        Venta venta = new Venta();
+        venta.agregarPartida(new Partida(cuaderno, 1000));
+
+        ExistenciaInsuficienteException error =
+                assertThrows(ExistenciaInsuficienteException.class, () -> repositorio.guardar(venta));
+
+        assertFalse(PersistenciaException.class.isInstance(error),
+                "La regla de negocio debe distinguirse de un fallo de la base");
+        assertTrue(error.getMessage().contains("Existencia insuficiente"));
+    }
+
+    @Test
+    void unRollbackPorIntegridadTampocoMueveElInventario() throws SQLException {
+        Partida partida = new Partida(cuaderno, 5);
+        partida.setCantidad(0); // el modelo lo permite despues de construir; el CHECK de la base no
+        Venta venta = new Venta();
+        venta.agregarPartida(partida);
+
+        assertThrows(PersistenciaException.class, () -> repositorio.guardar(venta));
+
+        assertEquals(100, existenciaDe("SIN-001"));
+    }
+
+    @Test
+    void despuesDeUnaSobreventaRevertidaLaSiguienteVentaValidaSiDescuenta() throws SQLException {
+        Venta excedida = new Venta();
+        excedida.agregarPartida(new Partida(cuaderno, 500));
+        assertThrows(ExistenciaInsuficienteException.class, () -> repositorio.guardar(excedida));
+
+        Venta valida = new Venta();
+        valida.agregarPartida(new Partida(cuaderno, 10));
+        repositorio.guardar(valida);
+
+        assertEquals(90, existenciaDe("SIN-001"));
+        assertEquals(1, contarTabla("venta"));
+    }
+
     // ---- utilidades de verificacion (consultas parametrizadas) ----
 
     private void insertarProducto(Producto p) throws SQLException {
@@ -155,6 +252,17 @@ class JdbcVentaRepositoryIT {
             ps.setBigDecimal(3, BigDecimal.valueOf(p.getPrecio()));
             ps.setInt(4, p.getExistencia());
             ps.executeUpdate();
+        }
+    }
+
+    private int existenciaDe(String codigo) throws SQLException {
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement("SELECT existencia FROM producto WHERE codigo = ?")) {
+            ps.setString(1, codigo);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next(), "No se encontro el producto " + codigo);
+                return rs.getInt(1);
+            }
         }
     }
 
