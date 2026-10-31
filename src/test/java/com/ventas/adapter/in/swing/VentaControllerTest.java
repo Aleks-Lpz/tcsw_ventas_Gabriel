@@ -3,7 +3,6 @@ package com.ventas.adapter.in.swing;
 import com.ventas.adapter.in.swing.controller.VentaController;
 import com.ventas.adapter.in.swing.DTO.CatalogoDTO;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
-import com.ventas.model.Venta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

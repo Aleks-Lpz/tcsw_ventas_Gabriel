@@ -2,9 +2,9 @@ package com.ventas.adapter.in.swing.view;
 
 import com.ventas.adapter.in.swing.controller.CatalogoController;
 import com.ventas.adapter.in.swing.controller.VentaController;
-import com.ventas.adapter.out.jdbc.ConfiguracionJdbc;
-import com.ventas.adapter.out.jdbc.JdbcProductoRepository;
-import com.ventas.adapter.out.jdbc.JdbcVentaRepository;
+import com.ventas.adapter.out.hibernate.ConfiguracionHibernate;
+import com.ventas.adapter.out.hibernate.HibernateProductoRepository;
+import com.ventas.adapter.out.hibernate.HibernateVentaRepository;
 import com.ventas.adapter.out.notification.ReciboObservador;
 import com.ventas.application.port.in.ConsultarProductosUseCase;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
@@ -14,18 +14,20 @@ import com.ventas.application.service.ProductoService;
 import com.ventas.application.service.PublicadorSimple;
 import com.ventas.application.service.RegistrarVentaService;
 import com.ventas.model.PoliticaDescuento;
+import jakarta.persistence.EntityManagerFactory;
 
-import javax.sql.DataSource;
-import javax.swing.*;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class ClienteVentasApp {
 
     public static void main(String[] args) {
-        ConfiguracionJdbc configuracion = ConfiguracionJdbc.desdeEntorno().orElseThrow();
-        DataSource dataSource = configuracion.crearDataSource();
-        // Inicializar repositorios y servicios
-        ProductoRepository productoRepository = new JdbcProductoRepository(dataSource);
-        VentaRepository ventaRepository = new JdbcVentaRepository(dataSource);
+        ConfiguracionHibernate configuracion = ConfiguracionHibernate.desdeEntorno().orElseThrow(
+                () -> new IllegalStateException("Define DB_URL, DB_USER y DB_PASSWORD en el entorno"));
+        EntityManagerFactory entityManagerFactory = configuracion.crearEntityManagerFactory();
+
+        ProductoRepository productoRepository = new HibernateProductoRepository(entityManagerFactory);
+        VentaRepository ventaRepository = new HibernateVentaRepository(entityManagerFactory);
 
         PublicadorSimple publicador = new PublicadorSimple();
         publicador.agregarObservador(new ReciboObservador());
@@ -38,38 +40,40 @@ public class ClienteVentasApp {
         };
 
         ProductoService productoService = new ProductoService(productoRepository);
-        RegistrarVentaService registrarVentaService = new RegistrarVentaService(ventaRepository, politicaDescuento, publicador);
-        // Iniciar la interfaz en el Event Dispatch Thread (EDT)
+        RegistrarVentaService registrarVentaService = new RegistrarVentaService(
+                ventaRepository, politicaDescuento, publicador);
+
         iniciarCliente(productoService, registrarVentaService);
     }
 
     public static ClienteVentasSwingFrame iniciarCliente(ConsultarProductosUseCase consultarProductosUseCase,
-   RegistrarVentaUseCase registrarVentaUseCase) {
-    CatalogoController catalogoController = new CatalogoController(consultarProductosUseCase);
-    VentaController ventaController = new VentaController(registrarVentaUseCase);
-    final ClienteVentasSwingFrame[] frameHolder = new ClienteVentasSwingFrame[1];
+                                                         RegistrarVentaUseCase registrarVentaUseCase) {
+        CatalogoController catalogoController = new CatalogoController(consultarProductosUseCase);
+        VentaController ventaController = new VentaController(registrarVentaUseCase);
 
-    try {
-        if (SwingUtilities.isEventDispatchThread()) {
-            frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController);
-        } else {
-            SwingUtilities.invokeAndWait(() -> frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController));
+        final ClienteVentasSwingFrame[] frameHolder = new ClienteVentasSwingFrame[1];
+        try {
+            if (SwingUtilities.isEventDispatchThread()) {
+                frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController);
+            } else {
+                SwingUtilities.invokeAndWait(
+                        () -> frameHolder[0] = crearYMostrarVentana(catalogoController, ventaController));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error al iniciar cliente Swing en el EDT: " + e.getMessage(), e);
         }
-    } catch (Exception e) {
-        throw new RuntimeException("Error al iniciar cliente Swing en el EDT: " + e.getMessage(), e);
+        return frameHolder[0];
     }
-    return frameHolder[0];
-}
 
-private static ClienteVentasSwingFrame crearYMostrarVentana(CatalogoController catalogoController,
-                                                            VentaController ventaController) {
-    configurarLookAndFeel();
-    ClienteVentasSwingFrame frame = new ClienteVentasSwingFrame(catalogoController, ventaController);
-    frame.setLocationRelativeTo(null);
-    frame.setVisible(true);
-    frame.cargarCatalogo();
-    return frame;
-}
+    private static ClienteVentasSwingFrame crearYMostrarVentana(CatalogoController catalogoController,
+                                                                VentaController ventaController) {
+        configurarLookAndFeel();
+        ClienteVentasSwingFrame frame = new ClienteVentasSwingFrame(catalogoController, ventaController);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.cargarCatalogo();
+        return frame;
+    }
 
     private static void configurarLookAndFeel() {
         try {
@@ -78,5 +82,4 @@ private static ClienteVentasSwingFrame crearYMostrarVentana(CatalogoController c
             // Se mantiene el Look and Feel predeterminado
         }
     }
-
 }

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Venta {
+
     private List<Partida> partidas;
     private double descuento;
 
@@ -33,10 +34,14 @@ public class Venta {
     }
 
     public void aplicarDescuento(Double descuento) {
-        if(descuento>=0) {
-        this.descuento=descuento;
+        if (descuento >= 0) {
+            this.descuento = descuento;
         } else {
-        throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
+            throw new IllegalArgumentException("Un descuento no puede ser menor a cero");
         }
+    }
+
+    public double getDescuento() {
+        return this.descuento;
     }
 }
