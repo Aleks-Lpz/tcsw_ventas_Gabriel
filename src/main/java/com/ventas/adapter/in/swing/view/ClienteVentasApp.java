@@ -14,7 +14,7 @@ import com.ventas.application.service.ProductoService;
 import com.ventas.application.service.PublicadorSimple;
 import com.ventas.application.service.RegistrarVentaService;
 import com.ventas.model.PoliticaDescuento;
-import jakarta.persistence.EntityManagerFactory;
+import javax.persistence.EntityManagerFactory;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;

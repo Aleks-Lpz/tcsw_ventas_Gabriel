@@ -1,0 +1,247 @@
+openapi: 3.1.0
+info:
+  title: API de Ventas
+  version: 0.1.0
+  description: Contrato de servicios para el catálogo de productos y ventas
+
+paths:
+  /productos:
+    get:
+      summary: Lista todos los productos
+      responses:
+        '200':
+          description: Consulta exitosa
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductoRespuesta'
+
+    post:
+      summary: Registra un nuevo producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevoProductoPeticion'
+      responses:
+        '201':
+          description: Recurso creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoRespuesta'
+        '400':
+          $ref: '#/components/responses/ErrorValidacion'
+
+  /productos/{id}:
+    get:
+      summary: Obtiene un producto por su identificador
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Identificador numérico del producto
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoRespuesta'
+        '404':
+          description: Producto inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemaDetalle'
+
+  /ventas:
+    post:
+      summary: Registra una nueva venta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaVentaPeticion'
+      responses:
+        '201':
+          description: Venta creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaRespuesta'
+        '400':
+          $ref: '#/components/responses/ErrorValidacion'
+        '409':
+          description: Conflicto por existencia insuficiente de inventario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemaDetalle'
+
+components:
+  schemas:
+    ProductoRespuesta:
+      type: object
+      required:
+        - id
+        - nombre
+        - precio
+        - existencia
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+        nombre:
+          type: string
+          example: "Teclado mecánico"
+        precio:
+          type: number
+          format: double
+          example: 850.00
+        existencia:
+          type: integer
+          example: 12
+
+    NuevoProductoPeticion:
+      type: object
+      required:
+        - nombre
+        - precio
+        - existencia
+      properties:
+        nombre:
+          type: string
+          example: "Mouse óptico"
+        precio:
+          type: number
+          format: double
+          example: 350.50
+        existencia:
+          type: integer
+          example: 25
+
+    # Datos requeridos para una partida en la petición de venta
+    ItemVentaPeticion:
+      type: object
+      required:
+        - productoId
+        - cantidad
+      properties:
+        productoId:
+          type: integer
+          format: int64
+          example: 101
+        cantidad:
+          type: integer
+          minimum: 1
+          example: 2
+
+    # Petición para registrar una venta
+    NuevaVentaPeticion:
+      type: object
+      required:
+        - partidas
+      properties:
+        partidas:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemVentaPeticion'
+
+    # Detalle de una partida en la respuesta
+    PartidaRespuesta:
+      type: object
+      required:
+        - productoId
+        - nombre
+        - cantidad
+        - precioUnitario
+        - subtotal
+      properties:
+        productoId:
+          type: integer
+          format: int64
+          example: 101
+        nombre:
+          type: string
+          example: "Teclado mecánico"
+        cantidad:
+          type: integer
+          example: 2
+        precioUnitario:
+          type: number
+          format: double
+          example: 850.00
+        subtotal:
+          type: number
+          format: double
+          example: 1700.00
+
+    # Representación de la venta confirmada y persistida
+    VentaRespuesta:
+      type: object
+      required:
+        - id
+        - fecha
+        - total
+        - descuento
+        - partidas
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        fecha:
+          type: string
+          format: date-time
+          example: "2026-11-05T18:00:00Z"
+        descuento:
+          type: number
+          format: double
+          example: 0.00
+        total:
+          type: number
+          format: double
+          example: 1700.00
+        partidas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartidaRespuesta'
+
+    ProblemaDetalle:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          example: "https://ejemplo.invalid/problemas/existencia-insuficiente"
+        title:
+          type: string
+          example: "Existencia insuficiente"
+        status:
+          type: integer
+          example: 409
+        detail:
+          type: string
+          example: "No hay stock suficiente para el producto 101"
+
+  responses:
+    ErrorValidacion:
+      description: Entrada inválida o sintaxis incorrecta
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemaDetalle'
