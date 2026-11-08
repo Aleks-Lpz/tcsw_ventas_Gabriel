@@ -39,6 +39,23 @@ class ConsultarProductosUseCaseTest {
         assertTrue(productos.isEmpty());
     }
 
+    @Test
+    void consultarPorIdBuscaElCodigoSolicitado() {
+        FakeProductoRepository repositorio = new FakeProductoRepository();
+        repositorio.guardar(new Producto("P001", "Teclado", 300.0, 10));
+        repositorio.guardar(new Producto("P002", "Mouse", 150.0, 20));
+        ConsultarProductosUseCase servicio = new ProductoService(repositorio);
+
+        assertEquals("Mouse", servicio.consultarPorId("P002").orElseThrow().getNombre());
+        assertFalse(servicio.consultarPorId("inexistente").isPresent());
+    }
+
+    @Test
+    void consultarPorIdEnCatalogoVacioRetornaOptionalVacio() {
+        ConsultarProductosUseCase servicio = new ProductoService(new FakeProductoRepository());
+        assertFalse(servicio.consultarPorId("P001").isPresent());
+    }
+
     private static class FakeProductoRepository implements ProductoRepository {
         private final List<Producto> productos = new ArrayList<>();
 
