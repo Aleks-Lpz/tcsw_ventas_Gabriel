@@ -20,7 +20,7 @@ public class HibernateVentaRepository implements VentaRepository {
 
     @Override
     public Venta guardar(Venta venta) {
-        insertar(venta);
+        venta.asignarId(insertar(venta));
         return venta;
     }
 

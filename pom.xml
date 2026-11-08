@@ -36,6 +36,12 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
         </dependency>
+        <!-- P09: @WebMvcTest / MockMvc para el adaptador REST -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- JUnit 5 Dependency for Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
