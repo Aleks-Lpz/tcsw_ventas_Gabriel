@@ -3,9 +3,9 @@ package com.ventas.adapter.out.hibernate;
 import com.ventas.application.port.out.VentaRepository;
 import com.ventas.model.Partida;
 import com.ventas.model.Venta;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 
 import java.util.Objects;
 

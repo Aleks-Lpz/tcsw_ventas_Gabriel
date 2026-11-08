@@ -3,9 +3,9 @@ package com.ventas.adapter.out.hibernate;
 import com.ventas.model.Partida;
 import com.ventas.model.Producto;
 import com.ventas.model.Venta;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
