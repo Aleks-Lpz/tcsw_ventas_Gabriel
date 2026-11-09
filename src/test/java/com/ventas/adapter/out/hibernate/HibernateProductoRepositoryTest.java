@@ -1,10 +1,10 @@
 package com.ventas.adapter.out.hibernate;
 
 import com.ventas.model.Producto;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.TypedQuery;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;

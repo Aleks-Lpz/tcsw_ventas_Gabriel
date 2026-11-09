@@ -1,7 +1,7 @@
 package com.ventas.adapter.out.hibernate;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,15 +48,11 @@ public final class ConfiguracionHibernate {
     }
 
     public EntityManagerFactory crearEntityManagerFactory() {
-        Map<String, String> propiedades = new HashMap<>();
-        propiedades.put("jakarta.persistence.jdbc.url", url);
-        propiedades.put("jakarta.persistence.jdbc.user", usuario);
-        propiedades.put("jakarta.persistence.jdbc.password", password);
-        return Persistence.createEntityManagerFactory(UNIDAD_PERSISTENCIA, propiedades);
-    }
-
-    public String getUrl() {
-        return url;
+    Map<String, String> propiedades = new HashMap<>();
+    propiedades.put("javax.persistence.jdbc.url", url);
+    propiedades.put("javax.persistence.jdbc.user", usuario);
+    propiedades.put("javax.persistence.jdbc.password", password);
+    return Persistence.createEntityManagerFactory(UNIDAD_PERSISTENCIA, propiedades);
     }
 
     @Override
