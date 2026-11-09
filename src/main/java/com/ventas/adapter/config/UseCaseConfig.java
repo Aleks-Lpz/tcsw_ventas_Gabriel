@@ -1,11 +1,13 @@
 package com.ventas.adapter.config;
 
+import javax.persistence.EntityManagerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import com.ventas.adapter.out.hibernate.ConfiguracionHibernate;
 import com.ventas.adapter.out.hibernate.HibernateProductoRepository;
 import com.ventas.adapter.out.hibernate.HibernateVentaRepository;
 import com.ventas.adapter.out.notification.ReciboObservador;
-import com.ventas.application.port.in.ConsultarProductosUseCase;
-import com.ventas.application.port.in.RegistrarProductoUseCase;
 import com.ventas.application.port.in.RegistrarVentaUseCase;
 import com.ventas.application.port.out.ProductoRepository;
 import com.ventas.application.port.out.PublicadorDeEventos;
@@ -14,9 +16,6 @@ import com.ventas.application.service.ProductoService;
 import com.ventas.application.service.PublicadorSimple;
 import com.ventas.application.service.RegistrarVentaService;
 import com.ventas.model.PoliticaDescuento;
-import javax.persistence.EntityManagerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UseCaseConfig {
@@ -33,19 +32,11 @@ public class UseCaseConfig {
         return new HibernateProductoRepository(emf);
     }
 
+    // Única declaración necesaria. Spring la usará automáticamente 
+    // para inyectar ConsultarProductosUseCase y RegistrarProductoUseCase.
     @Bean
     public ProductoService productoService(ProductoRepository productoRepository) {
         return new ProductoService(productoRepository);
-    }
-
-    @Bean
-    public ConsultarProductosUseCase consultarProductosUseCase(ProductoService productoService) {
-        return productoService;
-    }
-
-    @Bean
-    public RegistrarProductoUseCase registrarProductoUseCase(ProductoService productoService) {
-        return productoService;
     }
 
     @Bean
