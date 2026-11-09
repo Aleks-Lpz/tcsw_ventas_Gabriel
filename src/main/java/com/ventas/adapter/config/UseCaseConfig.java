@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UseCaseConfig {
 
-    // 1. Define a Bean for the EntityManagerFactory using your custom logic
     @Bean
     public EntityManagerFactory entityManagerFactory() {
         ConfiguracionHibernate config = ConfiguracionHibernate.desdeEntorno()
@@ -21,19 +20,23 @@ public class UseCaseConfig {
         return config.crearEntityManagerFactory();
     }
 
-    // 2. Spring will now inject the EntityManagerFactory created above
     @Bean 
     public ProductoRepository productoRepository(EntityManagerFactory emf) {
         return new HibernateProductoRepository(emf);
     }
 
     @Bean
-    public ConsultarProductosUseCase consultarProductosUseCase(ProductoRepository productoRepository) {
+    public ProductoService productoService(ProductoRepository productoRepository) {
         return new ProductoService(productoRepository);
     }
 
     @Bean
-    public RegistrarProductoUseCase registrarProductoUseCase(ProductoRepository productoRepository) {
-        return new ProductoService(productoRepository);
+    public ConsultarProductosUseCase consultarProductosUseCase(ProductoService productoService) {
+        return productoService;
+    }
+
+    @Bean
+    public RegistrarProductoUseCase registrarProductoUseCase(ProductoService productoService) {
+        return productoService;
     }
 }
