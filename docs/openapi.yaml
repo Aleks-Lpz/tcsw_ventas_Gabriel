@@ -44,9 +44,9 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
-            format: int64
-          description: Identificador numérico del producto
+            type: string
+          description: código identificador del producto (ej. P001)
+          example: "P001"
       responses:
         '200':
           description: Producto encontrado
@@ -97,9 +97,8 @@ components:
         - existencia
       properties:
         id:
-          type: integer
-          format: int64
-          example: 101
+          type: string
+          example: "P001"
         nombre:
           type: string
           example: "Teclado mecánico"
@@ -137,9 +136,8 @@ components:
         - cantidad
       properties:
         productoId:
-          type: integer
-          format: int64
-          example: 101
+          type: string
+          example: "P001"
         cantidad:
           type: integer
           minimum: 1
@@ -167,10 +165,9 @@ components:
         - precioUnitario
         - subtotal
       properties:
-        productoId:
-          type: integer
-          format: int64
-          example: 101
+          productoId:
+          type: string
+          example: "P001"
         nombre:
           type: string
           example: "Teclado mecánico"
