@@ -5,7 +5,6 @@ import com.ventas.model.Venta;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -18,7 +17,7 @@ public final class VentaMapper {
     public static VentaEntity toEntity(Venta venta, Function<String, ProductoEntity> proveedorProducto) {
         BigDecimal descuento = dinero(venta.getDescuento());
         BigDecimal total = dinero(venta.calcularTotal());
-        VentaEntity ventaEntity = new VentaEntity(null, ZonedDateTime.now(), descuento, total);
+        VentaEntity ventaEntity = new VentaEntity(null, venta.getFecha(), descuento, total);
 
         List<PartidaEntity> partidas = new ArrayList<>();
         for (Partida partida : venta.getPartidas()) {

@@ -1,16 +1,36 @@
 package com.ventas.model;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class Venta {
 
+    private Long id;
+    private final ZonedDateTime fecha;
     private List<Partida> partidas;
     private double descuento;
 
     public Venta() {
         this.partidas = new ArrayList<>();
+        this.fecha = ZonedDateTime.now();
+    }
+
+    /** Identificador asignado al persistir la venta; null mientras no se ha guardado. */
+    public Long getId() {
+        return id;
+    }
+
+    public void asignarId(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("El id de la venta debe ser positivo.");
+        }
+        this.id = id;
+    }
+
+    public ZonedDateTime getFecha() {
+        return fecha;
     }
 
     public void agregarPartida(Partida partida) {

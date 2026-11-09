@@ -1,7 +1,6 @@
 package com.ventas.adapter.config;
 
 import javax.persistence.EntityManagerFactory;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,6 +44,7 @@ public class UseCaseConfig {
         return new HibernateVentaRepository(emf);
     }
 
+    // 15 % de descuento a partir de 11 partidas; 0 en otro caso (misma regla que ClienteVentasApp).
     @Bean
     public PoliticaDescuento politicaDescuento() {
         return venta -> venta.getPartidas().size() > 10 ? venta.calcularTotal() * 0.15 : 0.0;
