@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/productos")
@@ -24,6 +26,14 @@ public class ProductoController {
         this.registrarProducto = registrarProducto;
     }
 
+    @GetMapping
+    public ResponseEntity<List<ProductoResponse>> listarTodos() {
+        List<ProductoResponse> respuesta = consultarProductos.consultarTodos().stream()
+                .map(ProductoRestMapper::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(respuesta);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductoResponse> consultar(@PathVariable("id") String id) {
         return consultarProductos.consultarPorId(id)
@@ -34,7 +44,8 @@ public class ProductoController {
 
     @PostMapping
     public ResponseEntity<ProductoResponse> registrar(@Valid @RequestBody ProductoRequest request) {
-        ProductoResponse response = ProductoRestMapper.toResponse( registrarProducto.registrar(ProductoRestMapper.toDomain(request)));
+        ProductoResponse response = ProductoRestMapper.toResponse(
+                registrarProducto.registrar(ProductoRestMapper.toDomain(request)));
         return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(response.getCodigo()).encode().toUri())
                 .body(response);
