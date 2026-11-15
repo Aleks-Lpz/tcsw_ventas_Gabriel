@@ -4,7 +4,13 @@
     <p class="subtitulo">M13. Consumo de API REST de Catálogo y Operaciones de Venta</p>
   </header>
 
-  <main class="main-content">
-    <app-catalogo (agregarAlCarrito)="alAgregarAlCarrito($event)"></app-catalogo>
+  <main class="main-grid">
+    <div class="columna-catalogo">
+      <app-catalogo (agregarAlCarrito)="alAgregarAlCarrito($event)"></app-catalogo>
+    </div>
+
+    <aside class="columna-carrito">
+      <app-carrito (ventaConfirmada)="alConfirmarVenta()"></app-carrito>
+    </aside>
   </main>
 </div>

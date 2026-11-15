@@ -1,0 +1,115 @@
+<section class="card carrito-card" aria-labelledby="titulo-carrito">
+  <div class="carrito-header">
+    <h2 id="titulo-carrito">Carrito de Compras ({{ totalArticulos }} artículos)</h2>
+    <button
+      id="btn-vaciar-carrito"
+      type="button"
+      class="btn-texto-peligro"
+      *ngIf="partidas.length > 0"
+      [disabled]="procesandoVenta"
+      (click)="limpiarCarrito()"
+    >
+      Vaciar carrito
+    </button>
+  </div>
+
+  <!-- Estado vacío -->
+  <p id="mensaje-carrito-vacio" class="carrito-vacio" *ngIf="partidas.length === 0">
+    El carrito está vacío. Seleccione productos del catálogo para agregarlos a la venta.
+  </p>
+
+  <!-- Tabla de partidas en el carrito -->
+  <div class="tabla-contenedor" *ngIf="partidas.length > 0">
+    <table id="tabla-carrito" class="tabla-carrito">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th>Precio Unit.</th>
+          <th>Cant.</th>
+          <th>Subtotal</th>
+          <th>Quitar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of partidas">
+          <td class="col-codigo">{{ item.producto.codigo }}</td>
+          <td>
+            {{ item.producto.nombre }}
+            <small
+              class="aviso-sobreventa"
+              *ngIf="item.cantidad > item.producto.existencia"
+            >
+              (Excede stock disponible: {{ item.producto.existencia }})
+            </small>
+          </td>
+          <td>${{ item.producto.precio | number:'1.2-2' }}</td>
+          <td>
+            <input
+              type="number"
+              class="input-cantidad-carrito"
+              min="1"
+              [disabled]="procesandoVenta"
+              [ngModel]="item.cantidad"
+              (ngModelChange)="cambiarCantidad(item.producto.codigo, $event)"
+              [attr.aria-label]="'Cantidad en carrito para ' + item.producto.nombre"
+            />
+          </td>
+          <td class="col-subtotal">${{ item.subtotal | number:'1.2-2' }}</td>
+          <td>
+            <button
+              type="button"
+              class="btn-eliminar-partida"
+              [disabled]="procesandoVenta"
+              (click)="quitarPartida(item.producto.codigo)"
+            >
+              Quitar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Resumen de Totales y Botón de Confirmación -->
+    <div class="resumen-venta">
+      <div class="totales-detalle">
+        <span>Total de artículos: <strong>{{ totalArticulos }}</strong></span>
+        <span class="subtotal-estimado">Subtotal estimado: <strong>${{ subtotal | number:'1.2-2' }}</strong></span>
+      </div>
+
+      <button
+        id="btn-confirmar-venta"
+        type="button"
+        class="btn-confirmar"
+        [disabled]="procesandoVenta || partidas.length === 0"
+        (click)="confirmarVenta()"
+      >
+        {{ procesandoVenta ? 'Procesando venta...' : 'Confirmar y Registrar Venta' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerta de Error de Negocio / Validación (400 / 409 ProblemaDetalle) -->
+  <div id="alerta-error-venta" class="alerta alerta-error" role="alert" *ngIf="errorVenta">
+    <strong>No se pudo registrar la venta:</strong> {{ errorVenta }}
+  </div>
+
+  <!-- Recibo de Venta Confirmada (201 Created) -->
+  <div id="recibo-venta-exitosa" class="recibo-card" role="status" *ngIf="reciboVenta">
+    <h3>Recibo de Venta Confirmada</h3>
+    <div class="recibo-meta">
+      <span><strong>Folio (ID):</strong> #{{ reciboVenta.id }}</span>
+      <span><strong>Fecha:</strong> {{ reciboVenta.fecha | date:'short' }}</span>
+    </div>
+    <ul class="recibo-partidas">
+      <li *ngFor="let p of reciboVenta.partidas">
+        {{ p.cantidad }}x {{ p.nombre }} (${{ p.precioUnitario | number:'1.2-2' }} c/u) =
+        <strong>${{ p.subtotal | number:'1.2-2' }}</strong>
+      </li>
+    </ul>
+    <div class="recibo-totales">
+      <span>Descuento aplicado: ${{ reciboVenta.descuento | number:'1.2-2' }}</span>
+      <span class="total-final">Total cobrado: ${{ reciboVenta.total | number:'1.2-2' }}</span>
+    </div>
+  </div>
+</section>

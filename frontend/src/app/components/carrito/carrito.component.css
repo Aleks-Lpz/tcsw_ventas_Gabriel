@@ -1,0 +1,185 @@
+.card {
+  background: #ffffff;
+  border: 1px solid #dce1e7;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.carrito-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.carrito-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #1f2937;
+}
+
+.carrito-vacio {
+  color: #64748b;
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+.tabla-carrito {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tabla-carrito th,
+.tabla-carrito td {
+  padding: 0.6rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabla-carrito th {
+  background-color: #f8fafc;
+  color: #334155;
+  font-weight: 600;
+}
+
+.col-codigo {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.col-subtotal {
+  font-weight: 600;
+}
+
+.aviso-sobreventa {
+  display: block;
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.input-cantidad-carrito {
+  width: 68px;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.btn-eliminar-partida {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-texto-peligro {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resumen-venta {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.totales-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.subtotal-estimado {
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.btn-confirmar {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background-color: #15803d;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirmar:disabled,
+.btn-eliminar-partida:disabled,
+.btn-texto-peligro:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alerta-error {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #f87171;
+  color: #991b1b;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.recibo-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f0fdf4;
+  border: 1px solid #4ade80;
+  border-radius: 8px;
+  color: #14532d;
+}
+
+.recibo-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+.recibo-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+}
+
+.recibo-partidas {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+}
+
+.recibo-totales {
+  margin-top: 0.65rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #86efac;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-final {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
