@@ -6,3 +6,8 @@ target/
 
 # Logs de ./scripts/verify-module.sh
 .verify/
+
+# Angular (M13 / P10)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/

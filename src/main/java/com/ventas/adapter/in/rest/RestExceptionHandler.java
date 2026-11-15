@@ -1,8 +1,8 @@
 package com.ventas.adapter.in.rest;
 
 import com.ventas.adapter.in.rest.dto.ProblemaDetalle;
+import com.ventas.adapter.out.jdbc.PersistenciaException;
 import com.ventas.model.ExistenciaInsuficienteException;
-
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * Convierte errores de validación y de dominio en respuestas ProblemaDetalle (400 / 409) según docs/openapi.yaml.
  */
-@RestControllerAdvice(basePackageClasses = RestExceptionHandler.class)
+@RestControllerAdvice
 public class RestExceptionHandler {
 
     private static final String TIPO_BASE = "https://ejemplo.invalid/problemas/";
@@ -39,13 +39,16 @@ public class RestExceptionHandler {
         return problema(HttpStatus.BAD_REQUEST, "producto-inexistente", "Producto inexistente", e.getMessage());
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ProblemaDetalle> reglaDeNegocio(IllegalArgumentException e) {
+    @ExceptionHandler({IllegalArgumentException.class, PersistenciaException.class})
+    public ResponseEntity<ProblemaDetalle> reglaDeNegocio(RuntimeException e) {
         return problema(HttpStatus.BAD_REQUEST, "entrada-invalida", "Entrada inválida", e.getMessage());
     }
 
-    @ExceptionHandler(ExistenciaInsuficienteException.class)
-    public ResponseEntity<ProblemaDetalle> existenciaInsuficiente(ExistenciaInsuficienteException e) {
+    @ExceptionHandler({
+            ExistenciaInsuficienteException.class,
+            com.ventas.application.exception.ExistenciaInsuficienteException.class
+    })
+    public ResponseEntity<ProblemaDetalle> existenciaInsuficiente(RuntimeException e) {
         return problema(HttpStatus.CONFLICT, "existencia-insuficiente", "Existencia insuficiente", e.getMessage());
     }
 
