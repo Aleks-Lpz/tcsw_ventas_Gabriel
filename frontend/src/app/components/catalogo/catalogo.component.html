@@ -1,0 +1,165 @@
+<div class="catalogo-layout">
+  <!-- SECCIÓN 1: Formulario Reactivo para Registrar Producto -->
+  <section class="card formulario-card" aria-labelledby="titulo-nuevo-producto">
+    <h2 id="titulo-nuevo-producto">Registrar Nuevo Producto</h2>
+
+    <form [formGroup]="formularioProducto" (ngSubmit)="registrarNuevoProducto()" novalidate>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="input-codigo">Código *</label>
+          <input
+            id="input-codigo"
+            type="text"
+            formControlName="codigo"
+            placeholder="Ej. P006 o 106"
+          />
+          <small class="error-msg" *ngIf="campoInvalido('codigo')">
+            El código es obligatorio.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="input-nombre">Nombre *</label>
+          <input
+            id="input-nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej. Café Molido 500g"
+          />
+          <small class="error-msg" *ngIf="campoInvalido('nombre')">
+            El nombre del producto es obligatorio.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="input-precio">Precio ($ MXN) *</label>
+          <input
+            id="input-precio"
+            type="number"
+            step="0.01"
+            min="0.01"
+            formControlName="precio"
+            placeholder="0.00"
+          />
+          <small class="error-msg" *ngIf="campoInvalido('precio')">
+            Ingrese un precio válido mayor o igual a $0.01.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="input-existencia">Existencia inicial *</label>
+          <input
+            id="input-existencia"
+            type="number"
+            step="1"
+            min="0"
+            formControlName="existencia"
+          />
+          <small class="error-msg" *ngIf="campoInvalido('existencia')">
+            La existencia no puede ser negativa (mínimo 0).
+          </small>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          id="btn-registrar-producto"
+          type="submit"
+          class="btn-primario"
+          [disabled]="registrandoProducto"
+        >
+          {{ registrandoProducto ? 'Registrando...' : 'Guardar Producto' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Mensajes de estado del registro -->
+    <div id="alerta-exito-registro" class="alerta alerta-exito" role="status" *ngIf="mensajeExitoRegistro">
+      {{ mensajeExitoRegistro }}
+    </div>
+
+    <div id="alerta-error-registro" class="alerta alerta-error" role="alert" *ngIf="errorRegistro">
+      <strong>Error al registrar:</strong> {{ errorRegistro }}
+    </div>
+  </section>
+
+  <!-- SECCIÓN 2: Catálogo de Productos -->
+  <section class="card catalogo-card" aria-labelledby="titulo-catalogo">
+    <div class="catalogo-header">
+      <h2 id="titulo-catalogo">Catálogo de Productos</h2>
+      <button
+        id="btn-recargar-catalogo"
+        type="button"
+        class="btn-secundario"
+        (click)="cargarCatalogo()"
+        [disabled]="cargandoCatalogo"
+      >
+        {{ cargandoCatalogo ? 'Consultando...' : 'Recargar Catálogo' }}
+      </button>
+    </div>
+
+    <!-- Estado 1: CARGANDO -->
+    <div id="estado-cargando-catalogo" class="estado-panel estado-cargando" *ngIf="cargandoCatalogo">
+      Cargando catálogo de productos desde la API...
+    </div>
+
+    <!-- Estado 2: ERROR -->
+    <div id="alerta-error-catalogo" class="alerta alerta-error" role="alert" *ngIf="!cargandoCatalogo && errorCatalogo">
+      <strong>Error de consulta:</strong> {{ errorCatalogo }}
+    </div>
+
+    <!-- Estado 3: ÉXITO (Tabla con datos) -->
+    <div class="tabla-contenedor" *ngIf="!cargandoCatalogo && !errorCatalogo">
+      <p id="mensaje-catalogo-vacio" class="estado-vacio" *ngIf="productos.length === 0">
+        No hay productos registrados en el catálogo.
+      </p>
+
+      <table id="tabla-catalogo" class="tabla-productos" *ngIf="productos.length > 0">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Existencia</th>
+            <th>Cantidad</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prod of productos" [class.sin-stock]="prod.existencia === 0">
+            <td class="col-codigo">{{ prod.codigo }}</td>
+            <td>{{ prod.nombre }}</td>
+            <td>${{ prod.precio | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge-stock" [class.agotado]="prod.existencia === 0">
+                {{ prod.existencia > 0 ? prod.existencia + ' disponibles' : 'Agotado (0)' }}
+              </span>
+            </td>
+            <td>
+              <input
+                type="number"
+                class="input-cantidad"
+                [attr.aria-label]="'Cantidad para ' + prod.nombre"
+                min="1"
+                [max]="prod.existencia"
+                [disabled]="prod.existencia === 0"
+                [ngModel]="obtenerCantidad(prod.codigo)"
+                (ngModelChange)="actualizarCantidad(prod, $event)"
+              />
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn-agregar-carrito"
+                [disabled]="prod.existencia === 0"
+                (click)="seleccionarParaCarrito(prod)"
+              >
+                Agregar al carrito
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
