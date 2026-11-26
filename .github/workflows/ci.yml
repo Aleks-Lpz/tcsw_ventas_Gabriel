@@ -1,0 +1,64 @@
+name: CI - Candidato de Liberacion v1.0-rc
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-build-and-test:
+    name: Backend (Maven + JUnit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar, ejecutar pruebas unitarias y empaquetar JAR
+        run: mvn -B clean package
+
+      - name: Guardar artefacto JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-tcsw-ventas-jar
+          path: target/tcsw-ventas-1.0-SNAPSHOT.jar
+
+  frontend-build-and-test:
+    name: Frontend (Angular + Karma Headless)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Ejecutar pruebas unitarias (24 tests)
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Generar artefacto de produccion (dist)
+        run: npm run build
+
+      - name: Guardar artefacto Frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-angular-dist
+          path: frontend/dist/frontend
